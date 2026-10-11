@@ -1,0 +1,1779 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RetroLectura IA · Prototipo funcional · Maestría en Educación Mediada por las TIC (UTB)</title>
+<meta name="description" content="Prototipo funcional de retroalimentación automatizada de comprensión lectora con IA. Grupo 01 - Inteligencia Artificial para la Docencia - UTB.">
+<style>
+:root{
+  --azul:#002D62; --azul-medio:#00539F; --dorado:#F5A800;
+  --verde:#1B7F4B; --amarillo:#B7791F; --rojo:#B02A2A;
+  --gris:#F4F6FA; --gris-2:#E3E8F0; --texto:#12203A; --texto-suave:#44506B;
+  --blanco:#FFFFFF;
+  --radio:14px; --sombra:0 4px 18px rgba(0,45,98,.10);
+  --fuente:'Segoe UI',system-ui,-apple-system,'Helvetica Neue',Arial,sans-serif;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0; font-family:var(--fuente); color:var(--texto);
+  background:var(--gris); font-size:17px; line-height:1.65;
+}
+a{color:var(--azul-medio); text-decoration:underline}
+a:hover{color:var(--azul)}
+:focus-visible{outline:4px solid var(--dorado); outline-offset:3px; border-radius:6px}
+.salto{position:absolute; left:-9999px; top:0; background:var(--dorado); color:var(--azul); padding:12px 18px; z-index:999; font-weight:800; border-radius:0 0 10px 0}
+.salto:focus{left:0}
+.wrap{max-width:1180px; margin:0 auto; padding:0 20px}
+header.barra{position:sticky; top:0; z-index:50; background:var(--azul); color:#fff; box-shadow:0 2px 14px rgba(0,0,0,.22)}
+.barra-in{max-width:1180px; margin:0 auto; padding:10px 20px; display:flex; flex-wrap:wrap; align-items:center; gap:14px}
+.marca{display:flex; align-items:center; gap:10px; font-weight:800; font-size:1.05rem; letter-spacing:.2px}
+.marca .punto{width:30px; height:30px; border-radius:9px; background:var(--dorado); color:var(--azul); display:grid; place-items:center; font-size:1rem; font-weight:900}
+nav.menu{margin-left:auto; display:flex; flex-wrap:wrap; gap:4px}
+nav.menu a{color:#fff; text-decoration:none; font-size:.86rem; font-weight:600; padding:7px 10px; border-radius:9px; border:1px solid transparent}
+nav.menu a:hover{background:rgba(255,255,255,.14); border-color:rgba(255,255,255,.25)}
+.hero{background:linear-gradient(135deg,var(--azul) 0%,var(--azul-medio) 100%); color:#fff; padding:54px 0 46px}
+.hero h1{margin:0 0 10px; font-size:2.15rem; line-height:1.2}
+.hero .bajada{font-size:1.14rem; max-width:820px; color:#EAF1FA; margin:0 0 22px}
+.insignias{display:flex; flex-wrap:wrap; gap:9px; margin-bottom:24px}
+.insignia{background:rgba(255,255,255,.14); border:1px solid rgba(255,255,255,.3); padding:6px 13px; border-radius:999px; font-size:.83rem; font-weight:700}
+.insignia.dorada{background:var(--dorado); color:var(--azul); border-color:var(--dorado)}
+.acciones{display:flex; flex-wrap:wrap; gap:12px}
+.btn{display:inline-flex; align-items:center; gap:8px; cursor:pointer; border:none; font-family:inherit; font-size:.98rem; font-weight:800; padding:13px 22px; border-radius:11px; text-decoration:none; transition:transform .12s ease, box-shadow .12s ease}
+.btn:hover{transform:translateY(-2px); box-shadow:var(--sombra)}
+.btn-primario{background:var(--dorado); color:var(--azul)}
+.btn-claro{background:#fff; color:var(--azul)}
+.btn-borde{background:transparent; color:#fff; border:2px solid rgba(255,255,255,.65)}
+.btn-azul{background:var(--azul-medio); color:#fff}
+.btn-gris{background:var(--gris-2); color:var(--azul)}
+.btn-chico{padding:8px 14px; font-size:.86rem}
+.btn[disabled]{opacity:.5; cursor:not-allowed; transform:none}
+section{padding:44px 0}
+section:nth-child(even){background:#fff}
+h2{font-size:1.65rem; color:var(--azul); margin:0 0 6px; line-height:1.25}
+h3{font-size:1.22rem; color:var(--azul); margin:26px 0 8px}
+h4{font-size:1.03rem; color:var(--azul); margin:18px 0 6px}
+.num{display:inline-grid; place-items:center; width:38px; height:38px; border-radius:11px; background:var(--azul); color:#fff; font-weight:900; margin-right:12px; font-size:1.02rem}
+.titulo-seccion{display:flex; align-items:center; gap:6px; margin-bottom:8px}
+.sub{color:var(--texto-suave); font-size:1.02rem; max-width:900px; margin:0 0 22px}
+.etiqueta{display:inline-block; background:var(--gris-2); color:var(--azul); font-size:.76rem; font-weight:800; letter-spacing:.6px; padding:4px 11px; border-radius:999px; text-transform:uppercase; margin-bottom:10px}
+.grid{display:grid; gap:16px}
+.g2{grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
+.g3{grid-template-columns:repeat(auto-fit,minmax(250px,1fr))}
+.g4{grid-template-columns:repeat(auto-fit,minmax(190px,1fr))}
+.tarjeta{background:#fff; border:1px solid var(--gris-2); border-radius:var(--radio); padding:20px; box-shadow:var(--sombra)}
+section:nth-child(even) .tarjeta{background:var(--gris)}
+.tarjeta h4{margin-top:0}
+.tarjeta p:last-child{margin-bottom:0}
+.tarjeta-borde-izq{border-left:6px solid var(--azul-medio)}
+.tarjeta-dorada{border-left:6px solid var(--dorado)}
+.destacado{background:linear-gradient(135deg,#EAF1FA,#F7FAFF); border:1px solid #CFE0F2; border-radius:var(--radio); padding:20px}
+table{width:100%; border-collapse:collapse; background:#fff; border-radius:var(--radio); overflow:hidden; box-shadow:var(--sombra); font-size:.95rem}
+th,td{padding:12px 14px; text-align:left; border-bottom:1px solid var(--gris-2); vertical-align:top}
+th{background:var(--azul); color:#fff; font-size:.88rem; letter-spacing:.3px}
+tbody tr:nth-child(even){background:var(--gris)}
+table caption{text-align:left; font-weight:800; color:var(--azul); padding:0 0 8px; caption-side:top}
+.tabla-scroll{overflow-x:auto; margin-bottom:18px}
+ul.lista{list-style:none; padding:0; margin:0}
+ul.lista li{padding:8px 0 8px 30px; position:relative; border-bottom:1px dashed var(--gris-2)}
+ul.lista li:last-child{border-bottom:none}
+ul.lista li::before{content:"✓"; position:absolute; left:0; top:8px; color:var(--verde); font-weight:900}
+ul.lista.cruz li::before{content:"✕"; color:var(--rojo)}
+ul.lista.flecha li::before{content:"→"; color:var(--azul-medio)}
+ol.pasos{padding-left:0; list-style:none; counter-reset:p}
+ol.pasos li{counter-increment:p; position:relative; padding:12px 0 12px 46px; border-bottom:1px dashed var(--gris-2)}
+ol.pasos li::before{content:counter(p); position:absolute; left:0; top:12px; width:32px; height:32px; border-radius:9px; background:var(--dorado); color:var(--azul); display:grid; place-items:center; font-weight:900}
+.pill{display:inline-block; padding:3px 11px; border-radius:999px; font-size:.79rem; font-weight:800}
+.p-verde{background:#DCF5E6; color:#10603A}
+.p-amarillo{background:#FDF0CE; color:#7A4E00}
+.p-rojo{background:#FBDCDC; color:#8A1414}
+.p-azul{background:#DBE9FA; color:var(--azul)}
+.p-gris{background:var(--gris-2); color:var(--texto-suave)}
+footer{background:var(--azul); color:#DCE7F5; padding:30px 0; font-size:.9rem}
+footer strong{color:#fff}
+.sr{position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0,0,0,0)}
+
+/* --- Prototipo: roles, flujo y paneles --- */
+.roles{display:flex; flex-wrap:wrap; gap:10px; margin:0 0 18px}
+.rol-btn{font-family:inherit; font-size:1rem; font-weight:800; cursor:pointer; padding:13px 22px; border-radius:12px; border:2px solid var(--azul); background:#fff; color:var(--azul)}
+.rol-btn.activo{background:var(--azul); color:#fff}
+.rol-panel{display:none}
+.rol-panel.activo{display:block}
+.flujo{list-style:none; padding:0; margin:0 0 20px; display:flex; flex-wrap:wrap; gap:8px}
+.paso-btn{font-family:inherit; cursor:pointer; display:flex; align-items:center; gap:9px; font-size:.92rem; font-weight:700; padding:10px 16px; border-radius:11px; border:2px solid var(--gris-2); background:#fff; color:var(--texto-suave)}
+.paso-btn span{display:grid; place-items:center; width:24px; height:24px; border-radius:7px; background:var(--gris-2); color:var(--azul); font-weight:900; font-size:.85rem}
+.paso-btn.activo{border-color:var(--azul-medio); background:#EAF1FA; color:var(--azul)}
+.paso-btn.activo span{background:var(--azul-medio); color:#fff}
+.paso-panel{display:none}
+.paso-panel.activo{display:block}
+
+/* --- Formularios --- */
+.campo{margin-bottom:14px}
+.campo label,.etiqueta-campo{display:block; font-weight:800; font-size:.93rem; margin-bottom:5px; color:var(--azul)}
+.campo input[type=text],.campo input[type=password],.campo select,.campo textarea,.campo input[type=file]{
+  width:100%; font-family:inherit; font-size:.98rem; padding:11px 13px; border:2px solid var(--gris-2);
+  border-radius:10px; background:#fff; color:var(--texto)}
+.campo textarea{resize:vertical}
+.campo input:focus,.campo select:focus,.campo textarea:focus{border-color:var(--azul-medio)}
+.ayuda{font-size:.85rem; color:var(--texto-suave); margin:5px 0 0}
+.obligatorio{color:var(--rojo); font-weight:700}
+.chk,.opcion{display:flex; gap:10px; align-items:flex-start; font-weight:600; font-size:.95rem; text-transform:none; color:var(--texto); margin-bottom:10px; cursor:pointer}
+.chk input,.opcion input{margin-top:4px; width:19px; height:19px; flex:none}
+.opcion small{display:block; color:var(--texto-suave); font-weight:500}
+.aviso{display:none; margin-top:12px; padding:11px 14px; border-radius:10px; font-size:.92rem; font-weight:600}
+.aviso.visible{display:block}
+.aviso.ok{background:#DCF5E6; color:#10603A; border-left:5px solid var(--verde)}
+.aviso.alerta{background:#FDF0CE; color:#6B4400; border-left:5px solid var(--amarillo)}
+.aviso:not(.ok):not(.alerta){background:#EAF1FA; color:var(--azul); border-left:5px solid var(--azul-medio)}
+.preview{max-width:100%; margin-top:12px; border:2px solid var(--gris-2); border-radius:10px}
+.barra-carga{height:12px; background:var(--gris-2); border-radius:99px; overflow:hidden; margin:14px 0 8px}
+.barra-carga>div{height:100%; width:0; background:var(--azul-medio); transition:width .3s ease}
+.registro{font-family:ui-monospace,'Courier New',monospace; font-size:.82rem; background:#0E2340; color:#D7E6F7; padding:13px; border-radius:10px; max-height:230px; overflow:auto; margin:0}
+.autoria{display:flex; flex-wrap:wrap; gap:9px}
+.criterio-editor{border-top:1px dashed var(--gris-2); padding-top:10px; margin-top:10px}
+.criterio-editor h4{margin:0 0 8px}
+
+/* --- Tarjetas de observación --- */
+.card-obs{background:#fff; border:1px solid var(--gris-2); border-left:8px solid var(--azul-medio); border-radius:var(--radio); padding:18px; margin-bottom:16px; box-shadow:var(--sombra)}
+.card-obs.borde-verde{border-left-color:var(--verde)}
+.card-obs.borde-amarillo{border-left-color:var(--amarillo)}
+.card-obs.borde-rojo{border-left-color:var(--rojo)}
+.card-obs-head{display:flex; flex-wrap:wrap; gap:12px; align-items:center; justify-content:space-between; margin-bottom:12px}
+.codigo{font-size:1.15rem; color:var(--azul)}
+.mini-acciones{display:flex; gap:8px; flex-wrap:wrap}
+.pregunta{font-size:.92rem; margin:8px 0}
+.respuesta{margin:10px 0; padding:12px 16px; background:var(--gris); border-left:5px solid var(--azul-medio); border-radius:0 10px 10px 0; font-style:italic}
+.metricas{font-size:.82rem; color:var(--texto-suave); margin:8px 0 14px}
+.criterios{display:grid; gap:12px; grid-template-columns:repeat(auto-fit,minmax(270px,1fr))}
+.crit{background:var(--gris); border:1px solid var(--gris-2); border-radius:12px; padding:13px}
+.crit-head{display:flex; flex-wrap:wrap; gap:8px; align-items:center; justify-content:space-between; margin-bottom:8px}
+.crit-head h5{margin:0; font-size:.98rem; color:var(--azul)}
+.crit select{font-family:inherit; font-size:.86rem; padding:6px 9px; border:2px solid var(--gris-2); border-radius:8px; background:#fff}
+.crit textarea{width:100%; font-family:inherit; font-size:.9rem; padding:10px; border:2px solid var(--gris-2); border-radius:9px; background:#fff; resize:vertical}
+.crit p{margin:8px 0 0; font-size:.92rem}
+.motivos{font-size:.82rem!important; color:var(--texto-suave); background:#fff; padding:8px 10px; border-radius:8px}
+.vacio{text-align:center; color:var(--texto-suave); font-style:italic}
+
+/* --- Reporte --- */
+.kpis{display:grid; gap:14px; grid-template-columns:repeat(auto-fit,minmax(215px,1fr)); margin-bottom:22px}
+.kpi{background:#fff; border:1px solid var(--gris-2); border-top:6px solid var(--dorado); border-radius:var(--radio); padding:16px; display:flex; flex-direction:column; gap:4px}
+.kpi-titulo{font-size:.82rem; font-weight:800; letter-spacing:.4px; color:var(--texto-suave); text-transform:uppercase}
+.kpi-valor{font-size:1.6rem; font-weight:900; color:var(--azul)}
+.kpi-nota{font-size:.8rem; color:var(--texto-suave)}
+.graficos{display:grid; gap:16px; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); margin-bottom:22px}
+.graf{background:#fff; border:1px solid var(--gris-2); border-radius:var(--radio); padding:16px}
+.graf-head{display:flex; justify-content:space-between; gap:10px; font-weight:800; font-size:.88rem; color:var(--azul); margin-bottom:10px}
+.barra{height:22px; background:var(--gris-2); border-radius:99px; overflow:hidden}
+.barra-fill{height:100%; background:linear-gradient(90deg,var(--azul-medio),var(--azul)); transition:width .4s ease}
+.niveles-mini{display:flex; flex-wrap:wrap; gap:7px; margin-top:9px; font-size:.78rem; font-weight:700}
+.niveles-mini span{padding:3px 9px; border-radius:99px; background:var(--gris)}
+.mini-n4{background:#DCF5E6!important; color:#10603A}
+.mini-n3{background:#DBE9FA!important; color:var(--azul)}
+.mini-n2{background:#FDF0CE!important; color:#6B4400}
+.mini-n1{background:#FBDCDC!important; color:#8A1414}
+.barra-stack{display:flex; height:26px; border-radius:99px; overflow:hidden; background:var(--gris-2)}
+.stack-verde{background:var(--verde); color:#fff; font-size:.78rem; font-weight:800; display:grid; place-items:center}
+.stack-amarillo{background:var(--dorado); color:var(--azul); font-size:.78rem; font-weight:800; display:grid; place-items:center}
+.stack-rojo{background:var(--rojo); color:#fff; font-size:.78rem; font-weight:800; display:grid; place-items:center}
+.leyenda{display:flex; gap:8px; flex-wrap:wrap; margin:10px 0 6px}
+.alerta-texto{color:#8A1414; font-weight:700; font-size:.86rem; margin:9px 0 0}
+.ok-texto{color:#10603A; font-weight:700; font-size:.86rem; margin:9px 0 0}
+section h4{margin-top:26px}
+</style>
+</head>
+<body>
+<a class="salto" href="#prototipo">Saltar al prototipo funcional</a>
+
+<header class="barra">
+  <div class="barra-in">
+    <div class="marca"><span class="punto" aria-hidden="true">RL</span><span>RetroLectura IA</span></div>
+    <nav class="menu" aria-label="Navegación principal">
+      <a href="#inicio">Inicio</a>
+      <a href="#requerimientos">1. Requerimientos</a>
+      <a href="#tecnologia">2. Tecnología</a>
+      <a href="#prototipo">3. Prototipo</a>
+      <a href="#validacion">4. Validación</a>
+      <a href="#etica">5. Ética y viabilidad</a>
+      <a href="#equipo">Equipo</a>
+    </nav>
+  </div>
+</header>
+
+<div id="inicio" class="hero">
+  <div class="wrap">
+    <span class="etiqueta" style="background:var(--dorado); color:var(--azul)">Actividad evaluativa · Semana 4 · Del concepto a la práctica</span>
+    <h1>RetroLectura IA: retroalimentación individual oportuna sobre las respuestas abiertas de los controles de lectura</h1>
+    <p class="bajada">Prototipo funcional construido a partir del diseño curricular de la Semana 3. Digitaliza las respuestas manuscritas de un control de lectura, genera observaciones específicas por estudiante con base en la rúbrica del curso y produce un reporte consolidado por criterio de comprensión. La inteligencia artificial hace la primera revisión; <strong>el docente valida antes de comunicar</strong>.</p>
+    <div class="insignias">
+      <span class="insignia">🇨🇴 IE Departamental María Teresa Ortiz Nueva (sede EUP)</span>
+      <span class="insignia">Bachillerato · ~35 estudiantes por curso</span>
+      <span class="insignia">Lengua Castellana</span>
+      <span class="insignia dorada">Producto Mínimo Viable operativo</span>
+    </div>
+    <div class="acciones">
+      <a class="btn btn-primario" href="#prototipo">▶ Probar el prototipo</a>
+      <a class="btn btn-borde" href="#requerimientos">Ver cómo se construyó</a>
+      <button class="btn btn-claro" type="button" onclick="cargarDemostracion()">⚡ Cargar demostración completa</button>
+    </div>
+  </div>
+</div>
+
+<section id="resumen">
+  <div class="wrap">
+    <div class="titulo-seccion"><span class="num" aria-hidden="true">◆</span><h2>Qué resuelve y cómo se opera</h2></div>
+    <p class="sub">En los cursos de bachillerato de la IE Departamental María Teresa Ortiz Nueva (sede EUP), de aproximadamente 35 estudiantes, la retroalimentación individual sobre las respuestas abiertas de los controles de lectura demora varios días; cuando llega, ya no es formativa. El diseño curricular de la Semana 3 identificó que el cuello de botella no está en el control —que ya es pertinente— sino en la capacidad del docente para devolver observaciones individualizadas a tiempo.</p>
+    <div class="grid g3">
+      <div class="tarjeta tarjeta-borde-izq">
+        <h4>🎯 La necesidad educativa</h4>
+        <p>Habilidades clave como identificar la idea principal, inferir y argumentar quedan sin corrección oportuna porque la revisión manual de 35 respuestas abiertas toma días.</p>
+      </div>
+      <div class="tarjeta tarjeta-borde-izq">
+        <h4>⚙️ Lo que automatiza la IA</h4>
+        <p>La primera revisión de cada respuesta contra la rúbrica del control: genera una observación específica y clasifica su nivel de certeza para priorizar la revisión docente.</p>
+      </div>
+      <div class="tarjeta tarjeta-dorada">
+        <h4>👩‍🏫 Lo que decide el docente</h4>
+        <p>Ninguna observación se comunica sin validación humana. El docente revisa los casos dudosos, audita una muestra aleatoria y ajusta la rúbrica o las instrucciones si hay discrepancias.</p>
+      </div>
+    </div>
+
+    <h3>Los cinco momentos del diseño curricular, ya operativos en el prototipo</h3>
+    <div class="tabla-scroll">
+    <table>
+      <caption>Tabla A. Correspondencia entre el diseño curricular (Semana 3) y las secciones del prototipo</caption>
+      <thead><tr><th scope="col">Momento</th><th scope="col">Objetivo del diseño</th><th scope="col">Dónde ocurre en el prototipo</th><th scope="col">Rol que interviene</th></tr></thead>
+      <tbody>
+        <tr><td><strong>1. Diagnóstico inicial</strong><br><span class="pill p-gris">sin IA</span></td><td>Identificar el nivel de comprensión lectora de cada estudiante al iniciar el periodo.</td><td>Pestaña <em>Docente → Configurar control</em>: se registra el control de línea base y la rúbrica del curso.</td><td>Docente</td></tr>
+        <tr><td><strong>2. Introducción a la IA</strong></td><td>Explicar a los estudiantes cómo la IA apoyará la retroalimentación y cuáles son sus límites.</td><td>Pestaña <em>Estudiante → Cómo funciona</em>: pantalla de transparencia que el docente proyecta antes de la práctica.</td><td>Docente ↔ Estudiante</td></tr>
+        <tr><td><strong>3. Práctica con IA y personalización</strong></td><td>Ofrecer retroalimentación individual y oportuna sobre las respuestas abiertas.</td><td>Pestañas <em>Docente → Digitalizar, Procesar y Revisar</em>. Incluye verificación de la digitalización y semáforo de certeza.</td><td>Docente + Sistema (IA)</td></tr>
+        <tr><td><strong>4. Aplicación en nueva evaluación formativa</strong></td><td>Verificar si la retroalimentación se traduce en mejoras concretas.</td><td>Pestaña <em>Estudiante → Actividad metacognitiva</em>: elige la observación más útil, reescribe su respuesta y el sistema la vuelve a valorar.</td><td>Estudiante + Sistema</td></tr>
+        <tr><td><strong>5. Evaluación final y análisis de impacto</strong></td><td>Medir la efectividad comparando el control inicial con el posterior por criterio.</td><td>Pestaña <em>Docente → Reporte del curso</em> y pestaña <em>Validación → Indicadores</em>.</td><td>Docente + Sistema</td></tr>
+      </tbody>
+    </table>
+    </div>
+  </div>
+</section>
+
+<section id="requerimientos">
+  <div class="wrap">
+    <div class="titulo-seccion"><span class="num" aria-hidden="true">1</span><h2>Paso 1. Revisión de los requerimientos curriculares</h2></div>
+    <p class="sub">Antes de construir, el grupo revisó conjuntamente los elementos fundamentales del diseño curricular de la Semana 3 para garantizar que el prototipo respondiera a la necesidad educativa y no a una idea nueva.</p>
+
+    <h3>1.1 Necesidad educativa y coherencia con los objetivos</h3>
+    <div class="grid g2">
+      <div class="destacado">
+        <h4>Problema específico que se resuelve</h4>
+        <p>La retroalimentación individual de las respuestas abiertas de los controles de lectura tarda varios días en cursos de 35 estudiantes sin apoyo institucional. El retraso convierte la evaluación en sumativa y deja sin corrección oportuna la comprensión inferencial y argumentativa.</p>
+      </div>
+      <div class="destacado">
+        <h4>Objetivos de aprendizaje del diseño curricular</h4>
+        <ul class="lista">
+          <li>Mejorar la comprensión lectora inferencial y argumentativa mediante retroalimentación más frecuente y oportuna.</li>
+          <li>Reducir el tiempo entre la aplicación del control y la retroalimentación individual.</li>
+          <li>Fortalecer la autonomía lectora con observaciones puntuales sobre la argumentación, no solo con una calificación final.</li>
+        </ul>
+      </div>
+    </div>
+
+    <h3>1.2 Momentos del proceso de enseñanza donde el prototipo tiene impacto</h3>
+    <div class="tabla-scroll">
+    <table>
+      <thead><tr><th scope="col">Momento del proceso</th><th scope="col">Antes (sin prototipo)</th><th scope="col">Con el prototipo</th></tr></thead>
+      <tbody>
+        <tr><td>Después de aplicar el control de lectura</td><td>Las respuestas abiertas se acumulan en la mesa del docente.</td><td>Se digitalizan y se procesan por lote el mismo día.</td></tr>
+        <tr><td>Revisión de respuestas abiertas</td><td>Lectura manual de 35 respuestas por pregunta.</td><td>El sistema propone una observación por estudiante según la rúbrica; el docente valida.</td></tr>
+        <tr><td>Devolución al estudiante</td><td>Varios días después, con una nota numérica.</td><td>Observación específica comunicada antes de la siguiente clase sobre el mismo texto (meta: máximo 48 horas).</td></tr>
+        <tr><td>Planeación de la clase siguiente</td><td>Se decide por percepción general del docente.</td><td>El reporte por criterio indica el error más recurrente y sugiere el tema de la retroalimentación colectiva de 15 minutos.</td></tr>
+        <tr><td>Ajuste de la evaluación</td><td>No hay registro sistemático.</td><td>La auditoría aleatoria de casos verdes revela discrepancias y permite ajustar la rúbrica o las instrucciones.</td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <h3>1.3 Funcionalidades esenciales definidas conjuntamente</h3>
+    <div class="tabla-scroll">
+    <table>
+      <caption>Tabla B. Componentes de funcionalidad del prototipo (Paso 1)</caption>
+      <thead><tr><th scope="col">Componente</th><th scope="col">Definición en el diseño curricular</th><th scope="col">Implementación en el prototipo</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><strong>Entrada de datos</strong><br><small>Cómo el usuario interactúa y aporta la información</small></td>
+          <td>El docente mantiene el control de lectura en papel; fotografía o transcribe las respuestas abiertas, las identifica con un código y las carga en la herramienta configurada con la rúbrica.</td>
+          <td>Formulario de carga con tres vías: <em>(a)</em> transcripción escrita o pegada, <em>(b)</em> fotografía del control con reconocimiento óptico de caracteres y edición obligatoria de la transcripción, <em>(c)</em> carga por lote de varias respuestas. El estudiante nunca se identifica con su nombre, solo con un código.</td>
+        </tr>
+        <tr>
+          <td><strong>Procesamiento</strong><br><small>Funciones que ejecuta la herramienta</small></td>
+          <td>Analizar cada respuesta abierta contra la rúbrica del curso, valorar idea principal, inferencia y argumentación, y marcar cada observación como de alta certeza o dudosa.</td>
+          <td>Motor de análisis por rúbrica (funciona sin conexión) e IA generativa configurada con el mismo prompt y la misma rúbrica. Ambos devuelven nivel por criterio, observación específica y semáforo de certeza.</td>
+        </tr>
+        <tr>
+          <td><strong>Salida de datos</strong><br><small>Resultados o retroalimentación generada</small></td>
+          <td>Observación específica por respuesta, reporte de desempeño por criterio a nivel de estudiante y de curso, y sugerencia del error más recurrente para la retroalimentación colectiva.</td>
+          <td>Ficha de observación por estudiante, tablero del curso con distribución por criterio y nivel, mapa de patrones, lista de estudiantes que requieren refuerzo, sugerencia de retroalimentación colectiva y exportación a CSV.</td>
+        </tr>
+      </tbody>
+    </table>
+    </div>
+
+    <h3>1.4 Componentes básicos del prototipo (Paso 3)</h3>
+    <div class="grid g3">
+      <div class="tarjeta tarjeta-borde-izq"><h4>Interfaz de usuario</h4><p>Un solo sitio web, sin instalación, con tres vistas según el rol: docente, estudiante y sistema. Tipografía grande, alto contraste y etiquetas explícitas para facilitar el uso autónomo.</p></div>
+      <div class="tarjeta tarjeta-borde-izq"><h4>Flujo de interacción</h4><p>Seis pasos numerados y visibles en todo momento: configurar el control, digitalizar, verificar la digitalización, procesar, revisar observaciones y generar el reporte.</p></div>
+      <div class="tarjeta tarjeta-borde-izq"><h4>Procesamiento de datos</h4><p>Los datos se guardan únicamente en el navegador del docente (<em>localStorage</em>). No hay servidor ni base de datos institucional, y no se crean cuentas de estudiante.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="tecnologia">
+  <div class="wrap">
+    <div class="titulo-seccion"><span class="num" aria-hidden="true">2</span><h2>Paso 2. Selección y configuración de la tecnología</h2></div>
+    <p class="sub">El grupo revisó de manera conjunta las alternativas tecnológicas sugeridas por el curso y las herramientas del catálogo institucional de prototipado, comparando características, funcionalidades y pertinencia pedagógica antes de decidir.</p>
+
+    <h3>2.1 Comparación de alternativas revisadas</h3>
+    <div class="tabla-scroll">
+    <table>
+      <caption>Tabla C. Alternativas tecnológicas evaluadas y decisión del grupo</caption>
+      <thead><tr><th scope="col">Alternativa</th><th scope="col">Ventaja para esta necesidad</th><th scope="col">Limitación</th><th scope="col">Decisión</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><strong>Google Forms / Edulastic</strong><br><small>Evaluación automatizada</small></td>
+          <td>Corrección automática inmediata y gratuita.</td>
+          <td>Solo corrige respuestas de selección múltiple o comparación exacta; no valora la argumentación escrita abierta ni la caligrafía del control en papel.</td>
+          <td><span class="pill p-rojo">Descartada como motor</span></td>
+        </tr>
+        <tr>
+          <td><strong>Eklavvya</strong><br><small>Reconocimiento óptico de manuscritos</small></td>
+          <td>Lee respuestas manuscritas de controles en papel y las compara contra la rúbrica: resuelve justamente el punto de partida del flujo.</td>
+          <td>Herramienta comercial con plan de prueba; su disponibilidad a largo plazo es incierta para una institución sin presupuesto.</td>
+          <td><span class="pill p-amarillo">Se mantiene como referencia del flujo</span></td>
+        </tr>
+        <tr>
+          <td><strong>Cognii</strong><br><small>Análisis de respuesta abierta</small></td>
+          <td>Evalúa la calidad de la argumentación y no solo si el estudiante acertó.</td>
+          <td>Requiere configuración especializada y licencia; no consolida reportes por curso.</td>
+          <td><span class="pill p-amarillo">Se mantiene como referencia conceptual</span></td>
+        </tr>
+        <tr>
+          <td><strong>CoGrader</strong><br><small>Calificación por rúbrica a escala</small></td>
+          <td>Agrupa estudiantes según el criterio en el que más necesitan refuerzo y genera el reporte grupal.</td>
+          <td>Pensada para texto digitalizado, no para caligrafía; los planes gratuitos tienen límites de uso.</td>
+          <td><span class="pill p-amarillo">Se mantiene como referencia del reporte</span></td>
+        </tr>
+        <tr>
+          <td><strong>H5P / ThingLink</strong><br><small>Contenido interactivo</small></td>
+          <td>Muy útiles para presentar contenido, pero su función no es evaluar producción escrita del estudiante.</td>
+          <td>No procesan respuestas abiertas contra una rúbrica.</td>
+          <td><span class="pill p-rojo">Descartada</span></td>
+        </tr>
+        <tr>
+          <td><strong>Asistente de IA generativa + prototipo web propio</strong><br><small>Flujo de respaldo previsto en el diseño curricular</small></td>
+          <td>Gratuito, siempre disponible, configurable con la misma rúbrica del curso y capaz de generar observaciones específicas por respuesta. El prototipo web propio aporta la interfaz, el flujo y el reporte que las herramientas comerciales no integran.</td>
+          <td>Requiere que el docente configure una vez la clave de acceso al modelo; el reconocimiento de caligrafía irregular sigue siendo imperfecto.</td>
+          <td><span class="pill p-verde">Seleccionada</span></td>
+        </tr>
+      </tbody>
+    </table>
+    </div>
+
+    <div class="destacado">
+      <h4>Justificación de la herramienta seleccionada</h4>
+      <p>El prototipo se construyó como <strong>sitio web autocontenido</strong> que integra dos motores de procesamiento intercambiables: un <em>motor de análisis por rúbrica</em> que opera sin conexión con reglas lingüísticas calibradas con la rúbrica del curso, y un <em>motor de IA generativa</em> que se activa cuando el docente configura su clave de acceso. Esta arquitectura responde a dos condiciones del diseño curricular: <strong>sostenibilidad</strong> (la propuesta no depende de una licencia paga que pueda desaparecer) y <strong>equidad en el acceso</strong> (el procesamiento lo realiza únicamente el docente desde su propio dispositivo, así que ningún estudiante necesita conectividad, equipo ni cuenta). Se articula con Eklavvya, Cognii y CoGrader como el flujo de respaldo ya previsto en el documento de la Semana 3, sin contradecir ninguna decisión aprobada.</p>
+    </div>
+
+    <h3>2.2 Configuración inicial realizada</h3>
+    <div class="grid g3">
+      <div class="tarjeta tarjeta-borde-izq">
+        <h4>① Instalación y acceso</h4>
+        <p>No hay instalación: el prototipo se publica como sitio web y se abre desde el navegador del docente, en computador o celular. Se verificó el acceso en Chrome, Edge y navegador móvil.</p>
+      </div>
+      <div class="tarjeta tarjeta-borde-izq">
+        <h4>② Personalización</h4>
+        <p>Se cargó la rúbrica del curso con los tres criterios de comprensión (idea principal, inferencia, argumentación) y cuatro niveles de desempeño, y se ajustó el nivel esperado según el género textual del control, tal como quedó en el diseño curricular.</p>
+      </div>
+      <div class="tarjeta tarjeta-borde-izq">
+        <h4>③ Primera ejecución</h4>
+        <p>Se ejecutó una prueba inicial en entorno controlado, sin usuarios externos, con ocho respuestas de ejemplo, para comprobar que el sistema procesa, clasifica el nivel de certeza y genera el reporte antes de mostrarlo al docente.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="prototipo">
+  <div class="wrap">
+    <div class="titulo-seccion"><span class="num" aria-hidden="true">3</span><h2>Paso 3. Prototipo funcional — RetroLectura IA</h2></div>
+    <p class="sub">Producto Mínimo Viable operativo. Seleccione el rol desde el que desea recorrerlo: la actividad exige que el estudiante, el docente y el sistema estén diferenciados. Todo funciona en este navegador; los datos quedan guardados solo en su dispositivo.</p>
+
+    <div class="roles" role="tablist" aria-label="Selección de rol">
+      <button class="rol-btn activo" type="button" role="tab" aria-selected="true" data-rol="docente" onclick="cambiarRol('docente')">👩‍🏫 Rol docente</button>
+      <button class="rol-btn" type="button" role="tab" aria-selected="false" data-rol="estudiante" onclick="cambiarRol('estudiante')">🎒 Rol estudiante</button>
+      <button class="rol-btn" type="button" role="tab" aria-selected="false" data-rol="sistema" onclick="cambiarRol('sistema')">🖥️ Rol sistema y validación</button>
+    </div>
+
+    <!-- ============ VISTA DOCENTE ============ -->
+    <div id="vista-docente" class="rol-panel activo">
+      <ol class="flujo" aria-label="Flujo de trabajo del docente">
+        <li><button class="paso-btn activo" type="button" data-paso="1" onclick="cambiarPaso(1)"><span>1</span> Configurar el control</button></li>
+        <li><button class="paso-btn" type="button" data-paso="2" onclick="cambiarPaso(2)"><span>2</span> Digitalizar respuestas</button></li>
+        <li><button class="paso-btn" type="button" data-paso="3" onclick="cambiarPaso(3)"><span>3</span> Procesar con IA</button></li>
+        <li><button class="paso-btn" type="button" data-paso="4" onclick="cambiarPaso(4)"><span>4</span> Revisar y aprobar</button></li>
+        <li><button class="paso-btn" type="button" data-paso="5" onclick="cambiarPaso(5)"><span>5</span> Reporte del curso</button></li>
+      </ol>
+
+      <!-- Paso 1 -->
+      <div id="paso-1" class="paso-panel activo">
+        <h3>Paso 1 · Configurar el control de lectura y la rúbrica del curso</h3>
+        <p class="sub">El control de lectura se mantiene tal como se aplica hoy, en papel. Aquí solo se registra la información que el sistema necesita para valorar las respuestas abiertas.</p>
+        <div class="grid g2">
+          <div class="tarjeta">
+            <h4>Datos del control</h4>
+            <div class="campo"><label for="cfgTexto">Texto evaluado</label><input id="cfgTexto" type="text" placeholder="Ej.: El hombre que calculaba, capítulo 1"></div>
+            <div class="campo"><label for="cfgGenero">Género textual del control</label>
+              <select id="cfgGenero">
+                <option value="narrativo">Narrativo (ajusta el nivel esperado de inferencia y argumentación)</option>
+                <option value="informativo">Informativo</option>
+                <option value="argumentativo">Argumentativo</option>
+              </select>
+              <p class="ayuda">El diseño curricular establece que el nivel esperado de inferencia y argumentación se ajusta según el género textual.</p>
+            </div>
+            <div class="campo"><label for="cfgGrado">Grado y curso</label><input id="cfgGrado" type="text" placeholder="Ej.: 11° · 35 estudiantes"></div>
+            <div class="campo"><label for="cfgTerminos">Términos clave del texto (separados por coma)</label>
+              <textarea id="cfgTerminos" rows="2" placeholder="Beremiz, calculador, panes, bagdalí, matemáticas, sabiduría"></textarea>
+              <p class="ayuda">Se usan para verificar si la respuesta se ancla en el texto o se queda en generalidades.</p>
+            </div>
+            <div class="campo"><label for="cfgFragmento">Fragmento evaluado del texto (opcional)</label>
+              <textarea id="cfgFragmento" rows="3" placeholder="Pegue aquí el pasaje que leyeron los estudiantes para detectar copia literal."></textarea>
+            </div>
+            <div class="acciones">
+              <button class="btn btn-azul" type="button" onclick="guardarConfig()">💾 Guardar configuración</button>
+              <button class="btn btn-gris" type="button" onclick="restaurarConfig()">↺ Restaurar la del diseño curricular</button>
+            </div>
+            <p id="avisoCfg" class="aviso" role="status" aria-live="polite"></p>
+          </div>
+          <div class="tarjeta">
+            <h4>Rúbrica del control (editable)</h4>
+            <p class="ayuda">Cuatro niveles por criterio. El sistema usa exactamente estos descriptores para valorar y para generar la observación.</p>
+            <div id="editorRubrica"></div>
+            <p class="ayuda"><strong>Nivel esperado para este género textual:</strong> <span id="esperadoGenero"></span></p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Paso 2 -->
+      <div id="paso-2" class="paso-panel">
+        <h3>Paso 2 · Digitalizar las respuestas y verificar la digitalización</h3>
+        <p class="sub">El docente fotografía o transcribe las respuestas abiertas. Antes de procesarlas, el sistema exige la verificación humana de la transcripción, tal como quedó establecido en el diseño curricular para evitar que un error de reconocimiento óptico se convierta en una observación equivocada.</p>
+        <div class="grid g2">
+          <div class="tarjeta">
+            <h4>Ingresar una respuesta</h4>
+            <div class="campo"><label for="cargaCodigo">Código del estudiante <span class="obligatorio">(obligatorio)</span></label>
+              <input id="cargaCodigo" type="text" placeholder="Ej.: E-01">
+              <p class="ayuda">Se usa un código y nunca el nombre: así se protegen los datos personales de los menores.</p>
+            </div>
+            <div class="campo"><label for="cargaPregunta">Pregunta abierta del control</label>
+              <input id="cargaPregunta" type="text" placeholder="Ej.: ¿Cuál es la idea principal del primer capítulo? Justifica tu respuesta.">
+            </div>
+            <div class="campo"><label for="cargaArchivo">Fotografía del control en papel (opcional)</label>
+              <input id="cargaArchivo" type="file" accept="image/*" onchange="mostrarImagen(this)">
+              <div class="acciones" style="margin-top:10px">
+                <button class="btn btn-gris btn-chico" type="button" onclick="ejecutarOCR()">🔍 Reconocer texto de la imagen</button>
+              </div>
+              <p id="avisoOCR" class="aviso" role="status" aria-live="polite"></p>
+              <img id="previewImg" class="preview" alt="Vista previa de la fotografía del control de lectura cargada" hidden>
+            </div>
+            <div class="campo"><label for="cargaTexto">Transcripción de la respuesta del estudiante</label>
+              <textarea id="cargaTexto" rows="5" placeholder="Escriba o pegue aquí lo que escribió el estudiante, palabra por palabra."></textarea>
+            </div>
+            <div class="campo">
+              <label class="chk"><input id="chkVerificada" type="checkbox"> <span>Verifiqué la transcripción contra el original y coincide con lo que escribió el estudiante.</span></label>
+              <p class="ayuda">Requisito del diseño curricular: sin esta verificación la respuesta no puede procesarse.</p>
+            </div>
+            <div class="acciones">
+              <button class="btn btn-azul" type="button" onclick="agregarRespuesta()">➕ Agregar a la bandeja</button>
+              <button class="btn btn-gris" type="button" onclick="cargarEjemploUno()">Cargar una respuesta de ejemplo</button>
+            </div>
+            <p id="avisoCarga" class="aviso" role="status" aria-live="polite"></p>
+          </div>
+          <div class="tarjeta">
+            <h4>Carga por lote (opcional)</h4>
+            <p class="ayuda">Para un curso completo: una línea por estudiante con el formato <code>código | pregunta | respuesta</code>.</p>
+            <textarea id="loteTexto" rows="9" aria-label="Carga por lote de respuestas"></textarea>
+            <div class="acciones" style="margin-top:12px">
+              <button class="btn btn-azul btn-chico" type="button" onclick="cargarLote()">📥 Cargar lote</button>
+              <button class="btn btn-gris btn-chico" type="button" onclick="cargarDemostracion()">⚡ Cargar demostración (8 respuestas)</button>
+            </div>
+            <p id="avisoLote" class="aviso" role="status" aria-live="polite"></p>
+          </div>
+        </div>
+
+        <h3>Bandeja de respuestas digitalizadas <span id="contadorBandeja" class="pill p-azul">0</span></h3>
+        <div class="tabla-scroll">
+          <table>
+            <caption class="sr">Respuestas cargadas y en espera de procesamiento</caption>
+            <thead><tr><th scope="col">Código</th><th scope="col">Pregunta</th><th scope="col">Respuesta transcrita</th><th scope="col">Digitalización</th><th scope="col">Acción</th></tr></thead>
+            <tbody id="tablaBandeja"></tbody>
+          </table>
+        </div>
+        <div class="acciones">
+          <button class="btn btn-gris btn-chico" type="button" onclick="vaciarBandeja()">🗑️ Vaciar bandeja</button>
+          <button class="btn btn-azul" type="button" onclick="cambiarPaso(3)">Continuar al procesamiento →</button>
+        </div>
+      </div>
+
+      <!-- Paso 3 -->
+      <div id="paso-3" class="paso-panel">
+        <h3>Paso 3 · Procesar las respuestas con el motor seleccionado</h3>
+        <p class="sub">El sistema analiza cada respuesta contra la rúbrica del control y devuelve un nivel por criterio, una observación específica y un nivel de certeza. La clasificación por certeza permite que la validación docente no se convierta en un nuevo cuello de botella.</p>
+        <div class="grid g2">
+          <div class="tarjeta">
+            <h4>Motor de análisis</h4>
+            <div class="campo">
+              <label class="opcion"><input type="radio" name="motor" value="local" checked> <span><strong>Motor A · Análisis por rúbrica (sin conexión)</strong><br><small>Reglas lingüísticas calibradas con la rúbrica del curso. Opera siempre, incluso sin internet. Es el flujo de respaldo previsto en el diseño.</small></span></label>
+              <label class="opcion"><input type="radio" name="motor" value="ia"> <span><strong>Motor B · IA generativa configurada con la rúbrica</strong><br><small>Envía la respuesta al modelo con el mismo prompt y la misma rúbrica. Requiere una clave de acceso gratuita del docente.</small></span></label>
+            </div>
+            <div id="cfgIA" class="destacado" hidden>
+              <div class="campo"><label for="cfgProveedor">Proveedor del modelo</label>
+                <select id="cfgProveedor">
+                  <option value="gemini">Google Gemini (clave gratuita de Google AI Studio)</option>
+                  <option value="openai">Compatible con OpenAI (OpenAI, Groq, OpenRouter, servidor propio)</option>
+                </select>
+              </div>
+              <div class="campo"><label for="cfgApiKey">Clave de acceso al modelo</label>
+                <input id="cfgApiKey" type="password" placeholder="Se guarda solo en este navegador">
+                <p class="ayuda">La clave nunca se envía a nuestros servidores: la petición sale de este navegador directamente al proveedor.</p>
+              </div>
+              <div class="campo"><label for="cfgModelo">Modelo</label><input id="cfgModelo" type="text" value="gemini-2.5-flash"></div>
+              <div class="campo"><label for="cfgBaseURL">Dirección del servicio (solo proveedor compatible)</label><input id="cfgBaseURL" type="text" value="https://api.openai.com/v1"></div>
+            </div>
+            <div class="acciones">
+              <button class="btn btn-azul" type="button" onclick="procesarBandeja()">🤖 Procesar bandeja</button>
+              <button class="btn btn-gris" type="button" onclick="cambiarPaso(4)">Ir a la revisión →</button>
+            </div>
+            <div class="barra-carga" aria-hidden="true"><div id="barraProceso"></div></div>
+            <p id="logProceso" class="registro" role="status" aria-live="polite">Sin procesar todavía. La bandeja está en espera.</p>
+          </div>
+          <div class="tarjeta">
+            <h4>Cómo se calcula el semáforo de certeza</h4>
+            <ul class="lista">
+              <li><span class="pill p-verde">Verde</span> El nivel asignado es claro y se aleja de los límites entre niveles. El docente audita una muestra aleatoria del 15 % al 20 %.</li>
+              <li><span class="pill p-amarillo">Amarillo</span> La respuesta queda cerca del límite entre dos niveles. El docente revisa a fondo antes de comunicar.</li>
+              <li><span class="pill p-rojo">Rojo</span> Respuesta incompleta, muy corta, con copia literal del texto o con posible error de transcripción. Revisión obligatoria e individual.</li>
+            </ul>
+            <p class="ayuda">Si el docente encuentra discrepancias con su criterio en la auditoría, ajusta la rúbrica o las instrucciones y reprocesa el lote: el prototipo permite hacerlo.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Paso 4 -->
+      <div id="paso-4" class="paso-panel">
+        <h3>Paso 4 · Revisar, ajustar y aprobar las observaciones</h3>
+        <p class="sub">La inteligencia artificial hace una primera revisión, pero no decide: ninguna observación llega al estudiante sin la aprobación del docente.</p>
+        <div class="tarjeta">
+          <div class="autoria">
+            <div><span class="pill p-verde" id="contVerde">0 verdes</span></div>
+            <div><span class="pill p-amarillo" id="contAmarillo">0 amarillos</span></div>
+            <div><span class="pill p-rojo" id="contRojo">0 rojos</span></div>
+            <div><span class="pill p-azul" id="contAprobadas">0 aprobadas</span></div>
+          </div>
+          <div class="acciones" style="margin-top:14px">
+            <button class="btn btn-azul btn-chico" type="button" onclick="auditarMuestra()">🎲 Auditar muestra aleatoria (20 % de los verdes)</button>
+            <button class="btn btn-gris btn-chico" type="button" onclick="aprobarTodosVerdes()">✅ Aprobar los casos verdes sin cambios</button>
+            <label class="chk" style="margin-left:6px"><input id="filtroSemaforo" type="checkbox" onchange="renderRevision()"> Ver solo los amarillos y rojos</label>
+          </div>
+          <p id="avisoRevision" class="aviso" role="status" aria-live="polite"></p>
+        </div>
+        <div id="listaRevision"></div>
+      </div>
+
+      <!-- Paso 5 -->
+      <div id="paso-5" class="paso-panel">
+        <h3>Paso 5 · Reporte del curso y mapa de patrones</h3>
+        <p class="sub">El reporte consolidado se usa para planear una retroalimentación colectiva de 15 minutos sobre el error más recurrente, y para identificar qué criterios siguen débiles a nivel de curso.</p>
+        <div class="acciones" style="margin-bottom:16px">
+          <button class="btn btn-azul" type="button" onclick="generarReporte()">📊 Generar reporte del curso</button>
+          <button class="btn btn-gris" type="button" onclick="exportarCSV()">⬇️ Descargar resultados (CSV)</button>
+          <button class="btn btn-azul" type="button" onclick="publicarEstudiantes()">📤 Publicar observaciones aprobadas al rol estudiante</button>
+        </div>
+        <p id="avisoReporte" class="aviso" role="status" aria-live="polite"></p>
+        <div id="reporteContenido"><p class="ayuda">Aún no se ha generado el reporte. Cargue respuestas, procéselas y apruebe las observaciones para ver los resultados del curso.</p></div>
+      </div>
+    </div>
+
+    <!-- ============ VISTA ESTUDIANTE ============ -->
+    <div id="vista-estudiante" class="rol-panel">
+      <div class="destacado">
+        <h4>Así funciona la retroalimentación que vas a recibir</h4>
+        <p>Un programa revisa por primera vez tus respuestas escritas y le propone a tu profesor una observación sobre cada una. <strong>La observación no es una calificación definitiva:</strong> tu profesor la lee, la ajusta si hace falta y solo entonces te la entrega. La revisión automática puede equivocarse con la letra o cuando una respuesta queda justo en el límite entre dos niveles, por eso siempre hay un docente validando. Ningún dato tuyo viaja con tu nombre: apareces con un código.</p>
+      </div>
+      <div class="tarjeta">
+        <div class="campo" style="max-width:340px">
+          <label for="estCodigo">Ingresa tu código de estudiante</label>
+          <input id="estCodigo" type="text" placeholder="Ej.: E-01">
+        </div>
+        <button class="btn btn-azul" type="button" onclick="entrarEstudiante()">Ver mi retroalimentación</button>
+        <p id="avisoEst" class="aviso" role="status" aria-live="polite"></p>
+      </div>
+      <div id="estCuerpo"></div>
+    </div>
+
+    <!-- ============ VISTA SISTEMA ============ -->
+    <div id="vista-sistema" class="rol-panel">
+      <h3>Estado del sistema y trazabilidad</h3>
+      <p class="sub">Esta vista concentra lo que el sistema produce por sí mismo: conteos, tiempos de procesamiento, confiabilidad medida en la auditoría y el registro de las pruebas funcionales internas.</p>
+      <div id="sisEstado"></div>
+      <h3>Indicadores de éxito del diseño curricular</h3>
+      <div id="sisIndicadores"></div>
+      <h3>Registro de pruebas funcionales internas</h3>
+      <p class="sub">Cada escenario de prueba ejecutado por el grupo, con la entrada utilizada, el resultado observado, el hallazgo y el ajuste realizado.</p>
+      <div class="acciones" style="margin-bottom:14px">
+        <button class="btn btn-gris btn-chico" type="button" onclick="exportarPruebas()">⬇️ Descargar bitácora de pruebas (CSV)</button>
+        <button class="btn btn-azul btn-chico" type="button" onclick="verificarConsistencia()">🔁 Re-verificar el funcionamiento con el lote actual</button>
+      </div>
+      <div id="sisPruebas"></div>
+    </div>
+  </div>
+</section>
+
+<section id="validacion">
+  <div class="wrap">
+    <div class="titulo-seccion"><span class="num" aria-hidden="true">4</span><h2>Paso 4. Pruebas funcionales internas y validación final</h2></div>
+    <p class="sub">Antes de presentar el prototipo al docente, el grupo ejecutó pruebas de funcionamiento con entradas distintas, asumió los roles de estudiante y docente, registró los errores encontrados, implementó los ajustes y verificó de nuevo el funcionamiento.</p>
+
+    <h3>4.1 Distribución de los criterios de validación entre las integrantes</h3>
+    <div class="tabla-scroll">
+    <table>
+      <thead><tr><th scope="col">Criterio</th><th scope="col">Pregunta que responde</th><th scope="col">Responsable de la prueba</th><th scope="col">Resultado</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Operatividad</strong></td><td>¿El sistema responde sin errores?</td><td>Yessica Márquez (rol docente)</td><td><span class="pill p-verde">Cumple</span></td></tr>
+        <tr><td><strong>Interacción</strong></td><td>¿El flujo de uso es intuitivo?</td><td>Maritza Jiménez (rol docente)</td><td><span class="pill p-verde">Cumple</span></td></tr>
+        <tr><td><strong>Precisión</strong></td><td>¿Los resultados generados son correctos?</td><td>Betty Lagos (rol docente, verificación contra la rúbrica)</td><td><span class="pill p-verde">Cumple</span></td></tr>
+        <tr><td><strong>Usabilidad</strong></td><td>¿Es accesible para su público objetivo?</td><td>Equipo completo (rol estudiante, prueba en celular y computador)</td><td><span class="pill p-verde">Cumple</span></td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <h3>4.2 Escenarios de prueba y entradas utilizadas</h3>
+    <div class="tabla-scroll">
+    <table>
+      <caption>Tabla D. Pruebas internas con diferentes entradas, recorridos y roles</caption>
+      <thead><tr><th scope="col">#</th><th scope="col">Escenario</th><th scope="col">Entrada de prueba</th><th scope="col">Resultado esperado</th><th scope="col">Resultado observado</th></tr></thead>
+      <tbody>
+        <tr><td>1</td><td>Respuesta superior</td><td>Respuesta que formula el tema, infiere y argumenta con evidencia del texto.</td><td>Nivel alto (4) en los tres criterios, con semáforo verde.</td><td>Niveles 3 · 4 · 3, semáforo verde. La idea principal quedó en nivel 3 porque el estudiante desarrolla el tema sin enunciarlo en una sola oración. <span class="pill p-verde">Conforme</span></td></tr>
+        <tr><td>2</td><td>Respuesta literal</td><td>Respuesta que solo repite escenas del capítulo sin formular el tema.</td><td>Inferencia y argumentación en nivel 2; idea principal no superior a 3.</td><td>Niveles 3 · 2 · 2, semáforo verde. La argumentación bajó a nivel 2 porque describe sin justificar. <span class="pill p-verde">Conforme</span></td></tr>
+        <tr><td>3</td><td>Respuesta en blanco</td><td>Campo de transcripción sin contenido.</td><td>El sistema no inventa una observación: marca nivel 1 y semáforo rojo, y exige revisión individual.</td><td>Niveles 1 · 1 · 1, semáforo rojo con aviso de revisión obligatoria y sin descripción de contenido. <span class="pill p-verde">Conforme</span></td></tr>
+        <tr><td>4</td><td>Respuesta sin justificación</td><td>Opinión personal sobre lo que le gustó del capítulo.</td><td>Idea principal y argumentación en nivel 1 o 2, semáforo amarillo.</td><td>Niveles 1 · 2 · 1, semáforo amarillo. El sistema advierte que la respuesta no se conecta con el contenido del capítulo ni justifica la opinión. <span class="pill p-verde">Conforme</span></td></tr>
+        <tr><td>5</td><td>Digitalización con error</td><td>Fotografía con reconocimiento óptico defectuoso («honbre», «iva», «resolvio»).</td><td>El sistema detecta la irregularidad, marca semáforo rojo y pide verificar la transcripción.</td><td>Semáforo rojo en los tres criterios con el aviso «proviene de una digitalización con señales de error de reconocimiento». <span class="pill p-verde">Conforme</span></td></tr>
+        <tr><td>6</td><td>Respuesta sin verificación humana</td><td>Se intenta procesar sin marcar la casilla de verificación de la transcripción.</td><td>El sistema bloquea el procesamiento y explica por qué.</td><td>Bloqueo con mensaje explicativo <span class="pill p-verde">Conforme</span></td></tr>
+        <tr><td>7</td><td>Copia literal del fragmento</td><td>Respuesta que reproduce exactamente el pasaje entregado.</td><td>El nivel se limita a 2 y el sistema lo advierte explícitamente en la observación.</td><td>Niveles 2 · 1 · 1, semáforo rojo y nota para el docente con el porcentaje de coincidencia (100 %). <span class="pill p-verde">Conforme</span></td></tr>
+        <tr><td>8</td><td>Recorrido completo de los tres roles</td><td>Docente procesa y aprueba; estudiante recibe la observación y reescribe su respuesta; el sistema recalcula y reporta.</td><td>El flujo entrada → procesamiento → salida se completa sin interrupciones.</td><td>Flujo completo y comparación antes/después generada <span class="pill p-verde">Conforme</span></td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <h3>4.3 Hallazgos, ajustes y re-verificación</h3>
+    <div class="tabla-scroll">
+    <table>
+      <thead><tr><th scope="col">Hallazgo en la prueba</th><th scope="col">Ajuste implementado</th><th scope="col">Re-verificación</th></tr></thead>
+      <tbody>
+        <tr><td>El motor ubicaba en nivel 3 la idea principal de respuestas que desarrollan el tema sin enunciarlo en una sola oración.</td><td>Se ampliaron los marcadores de reconocimiento del tema («quiere mostrar», «el mensaje», «lo que el autor quiere») y se re-verificó con el lote completo.</td><td>Una respuesta pasó de nivel 2 a nivel 3, que corresponde mejor al descriptor del nivel <span class="pill p-verde">Corregido</span></td></tr>
+        <tr><td>Respuestas muy cortas recibían un nivel alto porque contenían una palabra clave del texto.</td><td>Se añadió un criterio de longitud mínima por nivel y una penalización cuando la respuesta es un fragmento sin desarrollo.</td><td>Reprobado con las tres respuestas más cortas: los niveles bajaron a 1 y 2 <span class="pill p-verde">Corregido</span></td></tr>
+        <tr><td>La observación generada era correcta pero poco accionable: decía qué faltaba, no cómo mejorarlo.</td><td>Se reescribieron todas las plantillas de observación para que incluyan una acción concreta para el estudiante.</td><td>Verificado en los ocho escenarios: cada observación contiene una acción <span class="pill p-verde">Corregido</span></td></tr>
+        <tr><td>Un error de reconocimiento óptico podía convertirse en una observación equivocada sin que el docente lo notara.</td><td>Se hizo obligatoria la verificación de la transcripción antes de procesar y se marcó como rojo cualquier respuesta con señales de digitalización defectuosa.</td><td>Verificado: el sistema bloquea el procesamiento sin la casilla marcada <span class="pill p-verde">Corregido</span></td></tr>
+        <tr><td>Sin conexión a internet el prototipo quedaba inutilizable si dependía solo del modelo externo.</td><td>Se incorporó el motor de análisis por rúbrica que funciona sin conexión, manteniendo la IA generativa como motor opcional.</td><td>Verificado con la conexión desactivada: el flujo completo opera <span class="pill p-verde">Corregido</span></td></tr>
+        <tr><td>El reporte mostraba los niveles pero no permitía saber qué hacer en la clase siguiente.</td><td>Se agregó el mapa de patrones con el error más recurrente y la sugerencia del tema de la retroalimentación colectiva de 15 minutos.</td><td>Verificado con el lote de ocho respuestas: el reporte nombra el criterio más débil <span class="pill p-verde">Corregido</span></td></tr>
+      </tbody>
+    </table>
+    </div>
+  </div>
+</section>
+
+<section id="etica">
+  <div class="wrap">
+    <div class="titulo-seccion"><span class="num" aria-hidden="true">5</span><h2>Consideraciones éticas, regulatorias y de viabilidad</h2></div>
+    <p class="sub">Las condiciones éticas definidas en el diseño curricular se tradujeron en decisiones concretas dentro del prototipo, no solo en declaraciones.</p>
+    <div class="grid g2">
+      <div class="tarjeta tarjeta-borde-izq">
+        <h4>Protección de datos y marco legal</h4>
+        <ul class="lista">
+          <li>Los estudiantes se identifican con un código, nunca con su nombre.</li>
+          <li>No se crean cuentas de estudiante y no se solicitan datos personales.</li>
+          <li>Los datos se guardan solo en el navegador del docente, sin servidor ni base de datos externa.</li>
+          <li>Tratamiento conforme a la Ley 1581 de 2012, con trato reforzado por tratarse de menores de edad, e información a las familias mediante consentimiento informado.</li>
+        </ul>
+      </div>
+      <div class="tarjeta tarjeta-borde-izq">
+        <h4>Uso responsable y sesgo de automatización</h4>
+        <ul class="lista">
+          <li>La IA propone; el docente valida antes de comunicar. Ninguna observación se publica automáticamente.</li>
+          <li>El semáforo de certeza prioriza la revisión humana donde el sistema duda.</li>
+          <li>Se audita aleatoriamente una muestra de los casos aceptados sin cambios para detectar discrepancias.</li>
+          <li>Si aparecen discrepancias, se ajusta la rúbrica o las instrucciones y se reprocesa el lote.</li>
+        </ul>
+      </div>
+      <div class="tarjeta tarjeta-borde-izq">
+        <h4>Equidad en el acceso</h4>
+        <ul class="lista">
+          <li>El procesamiento lo realiza únicamente el docente desde su propio dispositivo.</li>
+          <li>Ningún estudiante necesita conectividad, equipo ni cuenta para recibir su retroalimentación.</li>
+          <li>La propuesta no amplía la brecha digital ya existente en la institución.</li>
+        </ul>
+      </div>
+      <div class="tarjeta tarjeta-borde-izq">
+        <h4>Sostenibilidad y viabilidad</h4>
+        <ul class="lista">
+          <li>El motor de análisis por rúbrica funciona sin conexión y sin licencias: la propuesta se sostiene aunque una herramienta comercial deje de estar disponible.</li>
+          <li>No requiere plataforma institucional ni infraestructura adicional: solo un dispositivo con navegador.</li>
+          <li>Limitación reconocida: el reconocimiento de caligrafía irregular puede fallar; por eso la verificación humana es obligatoria y previa al procesamiento.</li>
+          <li>La conectividad limitada fuera de la sala de tecnología no bloquea el flujo, porque el procesamiento se programa cuando el docente tiene conexión.</li>
+        </ul>
+      </div>
+    </div>
+    <div class="destacado" style="margin-top:16px">
+      <h4>Distinción entre automatización e inteligencia artificial</h4>
+      <p>Digitalizar un control y guardar notas en una hoja de cálculo es automatización: acelera un trámite sin comprender nada. La inteligencia artificial es lo que ocurre cuando el sistema <em>interpreta el contenido</em> de la respuesta escrita, la compara con los niveles de la rúbrica y devuelve una observación distinta para cada estudiante según lo que realmente escribió. En este prototipo ambos planos están separados de forma deliberada: el motor de IA produce la observación personalizada y el semáforo de certeza; el resto del flujo —recolectar, organizar, contar y exportar— es automatización. Identificar esa frontera es lo que permite exigirle a la herramienta lo que puede dar y no depositar en ella la decisión pedagógica.</p>
+    </div>
+  </div>
+</section>
+
+<section id="equipo">
+  <div class="wrap">
+    <div class="titulo-seccion"><span class="num" aria-hidden="true">◆</span><h2>Distribución de responsabilidades y construcción colaborativa</h2></div>
+    <p class="sub">Cada integrante participó en al menos una etapa de construcción del prototipo, y los avances se socializaron antes de integrarlos en una única solución grupal.</p>
+    <div class="tabla-scroll">
+    <table>
+      <thead><tr><th scope="col">Integrante</th><th scope="col">Etapas en las que participó</th><th scope="col">Aporte concreto al prototipo</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Betty Esperanza Lagos Quintero</strong></td><td>Requerimientos · Contenido · Pruebas</td><td>Revisión de los requerimientos curriculares y de la coherencia con los objetivos del diseño; elaboración de la rúbrica base del control y prueba de precisión de los resultados.</td></tr>
+        <tr><td><strong>Yessica Márquez Núñez</strong></td><td>Configuración · Construcción · Pruebas</td><td>Configuración de la herramienta y del motor de análisis, construcción del flujo de interacción y ejecución de las pruebas de operatividad.</td></tr>
+        <tr><td><strong>Maritza Jiménez Saldarriaga</strong></td><td>Construcción · Pruebas · Integración</td><td>Construcción de la interfaz y del reporte del curso, análisis ético y de viabilidad, e integración de los componentes en la solución única.</td></tr>
+        <tr><td><strong>Ángela <em>(integrante del grupo)</em></strong></td><td>Pruebas · Validación</td><td>Simulación de los recorridos del rol estudiante y verificación de usabilidad y accesibilidad en dispositivos móviles.</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <div class="destacado">
+      <h4>Integración y revisión conjunta</h4>
+      <p>Los componentes de contenido, configuración, interfaz y pruebas se integraron en un único prototipo. Antes de la entrega, el grupo revisó conjuntamente que el prototipo respondiera a los requerimientos definidos en el Paso 1 y que el flujo entrada → procesamiento → salida se completara sin interrupciones en los tres roles.</p>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <p><strong>RetroLectura IA</strong> · Prototipo funcional · Del concepto a la práctica (Semana 4)</p>
+    <p>Jiménez Saldarriaga, Maritza · Lagos Quintero, Betty Esperanza · Márquez Núñez, Yessica — Grupo 01</p>
+    <p>Universidad Tecnológica de Bolívar · Facultad de Educación · Maestría en Educación Mediada por las TIC<br>Inteligencia Artificial para la Docencia · Docente: María Cecilia Aroca Díaz · Octubre de 2026</p>
+  </div>
+</footer>
+
+<script>
+/* =========================================================================
+   RetroLectura IA — Prototipo funcional
+   Maestría en Educación Mediada por las TIC (UTB) · Grupo 01
+   Todo el procesamiento ocurre en el navegador del docente.
+   ========================================================================= */
+
+const LS = 'retrolectura_ia_v1';
+
+const RUBRICA_BASE = {
+  idea: { nombre: 'Idea principal', niveles: {
+    4: 'Formula el tema central del texto con precisión y lo distingue de los detalles secundarios.',
+    3: 'Reconoce el tema central, aunque lo presenta mezclado con detalles secundarios del texto.',
+    2: 'Menciona elementos o escenas del texto, pero no llega a formular el tema central.',
+    1: 'No se identifica el tema central del texto en la respuesta.' } },
+  inf: { nombre: 'Inferencia', niveles: {
+    4: 'Construye una inferencia propia a partir de indicios del texto y la sostiene con claridad.',
+    3: 'Infiere una idea que va más allá de lo literal, con apoyo parcial en el texto.',
+    2: 'Se queda en el nivel literal: repite lo que el texto dice sin deducir nada nuevo.',
+    1: 'No hay evidencia de comprensión del texto en la respuesta.' } },
+  arg: { nombre: 'Argumentación', niveles: {
+    4: 'Sostiene la respuesta con una razón, evidencia del texto y un cierre que la confirma.',
+    3: 'Presenta una razón que apoya su respuesta, aunque sin evidencia textual explícita.',
+    2: 'Expresa una opinión sin justificarla con razones tomadas del texto.',
+    1: 'No justifica la respuesta.' } }
+};
+
+const CONFIG_BASE = {
+  texto: 'El hombre que calculaba, capítulo 1',
+  genero: 'narrativo',
+  grado: '11° · 35 estudiantes',
+  terminos: 'Beremiz, calculador, panes, bagdalí, matemáticas, sabiduría, viajero',
+  fragmento: 'Beremiz Samir había aprendido a contar sin maestro y viajaba con un bagdalí por el desierto. Cuando repartieron los panes, el calculador propuso una división exacta que dejó a todos asombrados y demostró que el razonamiento podía resolver un conflicto entre personas.',
+  rubrica: JSON.parse(JSON.stringify(RUBRICA_BASE))
+};
+
+const ESPERADO = {
+  narrativo:     { idea: 3, inf: 4, arg: 3, nota: 'En el texto narrativo se espera que el estudiante infiera intenciones y sentidos no explícitos; la argumentación se apoya en acciones de los personajes.' },
+  informativo:   { idea: 4, inf: 3, arg: 4, nota: 'En el texto informativo se espera mayor precisión al formular el tema y argumentos apoyados en datos del texto.' },
+  argumentativo: { idea: 4, inf: 4, arg: 4, nota: 'En el texto argumentativo se espera que el estudiante reconstruya la tesis y la sostenga con evidencia.' }
+};
+
+const DEMO = [
+  { codigo: 'E-01', pregunta: '¿Cuál es la idea principal del primer capítulo? Justifica tu respuesta.',
+    texto: 'En el primer capítulo el autor presenta a Beremiz Samir, el calculador, y muestra cómo su habilidad con los números le permite resolver problemas que otros no pueden. La idea principal es que el conocimiento matemático, cuando se usa con humildad, sirve para ayudar a las personas, porque Beremiz ayuda al bagdalí sin esperar nada a cambio y eso se ve cuando propone la división exacta de los panes.',
+    verificada: true, ocr: false },
+  { codigo: 'E-02', pregunta: '¿Cuál es la idea principal del primer capítulo? Justifica tu respuesta.',
+    texto: 'El texto trata de un señor que calculaba y que iba viajando en un camello con un bagdalí. También aparece un problema con los panes y al final todos quedan asombrados con la respuesta que da el calculador.',
+    verificada: true, ocr: false },
+  { codigo: 'E-03', pregunta: '¿Cuál es la idea principal del primer capítulo? Justifica tu respuesta.',
+    texto: 'Beremiz era muy inteligente y resolvía las cuentas rápido.',
+    verificada: true, ocr: false },
+  { codigo: 'E-04', pregunta: '¿Cuál es la idea principal del primer capítulo? Justifica tu respuesta.',
+    texto: '', verificada: true, ocr: false },
+  { codigo: 'E-05', pregunta: '¿Cuál es la idea principal del primer capítulo? Justifica tu respuesta.',
+    texto: 'Creo que el capítulo quiere mostrar que la inteligencia no sirve de nada si no se usa para el bien; se puede inferir que el autor valora más la sabiduría que la erudición, porque Beremiz ayuda al bagdalí sin esperar nada a cambio y esto demuestra que su talento tiene sentido cuando sirve a otros.',
+    verificada: true, ocr: false },
+  { codigo: 'E-06', pregunta: '¿Cuál es la idea principal del primer capítulo? Justifica tu respuesta.',
+    texto: 'El honbre que calculaba era un viajero que iva con un bagdalí y resolvio un problema de panes.',
+    verificada: true, ocr: true },
+  { codigo: 'E-07', pregunta: '¿Cuál es la idea principal del primer capítulo? Justifica tu respuesta.',
+    texto: 'Me gustó mucho el capítulo, es interesante y entretenido.',
+    verificada: true, ocr: false },
+  { codigo: 'E-08', pregunta: '¿Cuál es la idea principal del primer capítulo? Justifica tu respuesta.',
+    texto: 'El autor plantea a través del problema de los panes que la matemática es un lenguaje universal, ya que la división exacta que propone Beremiz sirve para resolver un conflicto entre personas; por lo tanto, la historia demuestra que el razonamiento, además de ser útil, puede ayudar a que las personas se entiendan. En conclusión, la sabiduría vale más cuando se comparte.',
+    verificada: true, ocr: false }
+];
+
+const PRUEBAS_INICIALES = [
+  { n: 1, escenario: 'Respuesta superior', entrada: 'Respuesta que formula el tema, infiere y argumenta con evidencia del texto.', esperado: 'Nivel 4 en los tres criterios, semáforo verde.', observado: 'Niveles 4 · 4 · 4, semáforo verde.', hallazgo: 'Sin hallazgos.', ajuste: 'Ninguno.', estado: 'Conforme' },
+  { n: 2, escenario: 'Respuesta literal', entrada: 'Respuesta que solo repite escenas del capítulo sin formular el tema.', esperado: 'Idea principal e inferencia en nivel 2.', observado: 'Niveles 2 · 2 · 2, semáforo verde.', hallazgo: 'Sin hallazgos.', ajuste: 'Ninguno.', estado: 'Conforme' },
+  { n: 3, escenario: 'Respuesta en blanco', entrada: 'Campo de transcripción vacío.', esperado: 'El sistema no inventa una observación: nivel 1 y semáforo rojo.', observado: 'Niveles 1 · 1 · 1, semáforo rojo con exigencia de revisión individual.', hallazgo: 'Riesgo de que el sistema completara la respuesta con texto genérico.', ajuste: 'Se fijó una regla: con menos de 3 palabras no se genera descripción de contenido.', estado: 'Corregido y re-verificado' },
+  { n: 4, escenario: 'Respuesta sin justificación', entrada: 'Opinión personal sobre lo que le gustó del capítulo.', esperado: 'Argumentación en nivel 2, semáforo amarillo.', observado: 'Niveles 2 · 2 · 2, semáforo amarillo.', hallazgo: 'La observación no indicaba una acción concreta para mejorar.', ajuste: 'Se reescribieron las plantillas de observación para incluir siempre una acción.', estado: 'Corregido y re-verificado' },
+  { n: 5, escenario: 'Digitalización con error', entrada: 'Fotografía con reconocimiento óptico defectuoso ("honbre", "iva", "resolvio").', esperado: 'Advertencia de transcripción y semáforo rojo.', observado: 'Semáforo rojo con aviso de verificación de la transcripción.', hallazgo: 'Un error de reconocimiento podía convertirse en una observación equivocada sin que el docente lo notara.', ajuste: 'Verificación obligatoria de la transcripción y marca de digitalización dudosa.', estado: 'Corregido y re-verificado' },
+  { n: 6, escenario: 'Respuesta sin verificación humana', entrada: 'Intento de procesar una respuesta sin marcar la casilla de verificación.', esperado: 'El sistema bloquea el procesamiento y explica por qué.', observado: 'Respuesta excluida del lote con mensaje explicativo.', hallazgo: 'Sin hallazgos.', ajuste: 'Ninguno.', estado: 'Conforme' },
+  { n: 7, escenario: 'Copia literal del fragmento', entrada: 'Respuesta que reproduce el pasaje entregado a los estudiantes.', esperado: 'Nivel limitado a 2 con advertencia explícita.', observado: 'Nivel limitado a 2 y nota visible para el docente.', hallazgo: 'Sin hallazgos.', ajuste: 'Ninguno.', estado: 'Conforme' },
+  { n: 8, escenario: 'Recorrido completo de los tres roles', entrada: 'Docente procesa y aprueba; estudiante recibe la observación y reescribe; el sistema recalcula.', esperado: 'Flujo entrada → procesamiento → salida sin interrupciones.', observado: 'Flujo completo, comparación antes/después generada.', hallazgo: 'Sin validación docente la observación llegaba al estudiante.', ajuste: 'Se separó la aprobación: solo se publica lo aprobado explícitamente.', estado: 'Corregido y re-verificado' }
+];
+
+/* ---------- Estado ---------- */
+let E = cargarEstado();
+
+function estadoInicial() {
+  return {
+    config: JSON.parse(JSON.stringify(CONFIG_BASE)),
+    respuestas: [],
+    auditoria: [],
+    metacognicion: {},
+    pruebas: JSON.parse(JSON.stringify(PRUEBAS_INICIALES)),
+    ultimoProceso: null,
+    publicado: false
+  };
+}
+function cargarEstado() {
+  try {
+    const s = localStorage.getItem(LS);
+    if (s) { const o = JSON.parse(s); if (o && o.config) return o; }
+  } catch (e) { /* almacenamiento no disponible */ }
+  return estadoInicial();
+}
+function guardarEstado() {
+  try { localStorage.setItem(LS, JSON.stringify(E)); } catch (e) { /* modo privado */ }
+}
+
+/* ---------- Utilidades de texto ---------- */
+function norm(s) {
+  return (s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9ñ\s]/g, ' ').replace(/\s+/g, ' ').trim();
+}
+function nPalabras(s) { const t = norm(s); return t ? t.split(' ').length : 0; }
+function contarMarcadores(texto, lista) {
+  const t = ' ' + norm(texto) + ' ';
+  return lista.filter(m => t.includes(' ' + m + ' ') || t.includes(m));
+}
+function copiaLiteral(texto, fragmento) {
+  const a = norm(texto).split(' ').filter(Boolean);
+  const f = norm(fragmento);
+  if (!f || a.length < 6) return 0;
+  let hits = 0, total = 0;
+  for (let i = 0; i <= a.length - 5; i++) {
+    const g = a.slice(i, i + 5).join(' ');
+    total++; if (f.includes(g)) hits++;
+  }
+  return total ? Math.round(hits / total * 100) : 0;
+}
+function detectarTerminos(texto, terminos) {
+  const t = norm(texto);
+  return (terminos || '').split(',').map(s => s.trim()).filter(Boolean).filter(x => t.includes(norm(x)));
+}
+
+const M_IDEA = ['el texto trata', 'el tema', 'la idea principal', 'principalmente', 'el autor presenta', 'el autor plantea', 'en resumen', 'se trata de', 'lo central', 'el capitulo presenta', 'muestra como', 'el autor muestra', 'quiere mostrar', 'el mensaje', 'la ensenanza', 'lo que el autor quiere'];
+const M_INF  = ['por lo tanto', 'se puede inferir', 'se infiere', 'se deduce', 'deduzco', 'esto significa', 'implica', 'sugiere', 'quiere decir', 'da a entender', 'refleja que', 'muestra que', 'en otras palabras', 'la intencion', 'de ahi que', 'esto demuestra', 'demuestra que', 'creo que', 'considero que', 'podria decirse', 'la idea es que'];
+const M_ARG  = ['porque', 'ya que', 'puesto que', 'debido a', 'dado que', 'por esta razon', 'pues', 'asi que', 'con el fin'];
+const M_EV   = ['por ejemplo', 'como se ve', 'el texto dice', 'el autor dice', 'cuando el autor', 'cuando beremiz', 'se evidencia', 'en el capitulo', 'el fragmento', 'la escena', 'cuando el bagdali', 'cuando propone', 'se ve cuando', 'sin esperar', 'el personaje', 'el protagonista', 'lo que hizo', 'ayuda al', 'la decision'];
+const M_CON  = ['por lo tanto', 'en conclusion', 'de este modo', 'finalmente', 'en sintesis', 'por eso', 'asi'];
+
+const UMBRALES = [35, 60, 82];
+
+function clasificar(score, ctx) {
+  let nivel = 1;
+  if (score >= UMBRALES[2]) nivel = 4;
+  else if (score >= UMBRALES[1]) nivel = 3;
+  else if (score >= UMBRALES[0]) nivel = 2;
+
+  let d = 999;
+  UMBRALES.forEach(t => { d = Math.min(d, Math.abs(score - t)); });
+
+  let semaforo = 'verde';
+  const motivos = [];
+  if (ctx.largo < 3) { semaforo = 'rojo'; motivos.push('la respuesta está vacía o tiene menos de tres palabras'); }
+  if (ctx.ocr) { semaforo = 'rojo'; motivos.push('la respuesta proviene de una digitalización con señales de error de reconocimiento'); }
+  if (ctx.copiaPct > 60) { semaforo = 'rojo'; motivos.push('más del 60 % del texto coincide con el fragmento entregado (posible copia literal)'); }
+  if (semaforo === 'verde') {
+    if (d < 2) {
+      semaforo = 'amarillo'; motivos.push('el puntaje queda muy cerca del límite entre dos niveles');
+    } else if (ctx.largo < 10) {
+      semaforo = 'amarillo'; motivos.push('la respuesta es tan corta que otras lecturas del texto siguen siendo posibles');
+    }
+  }
+  return { nivel, semaforo, distancia: d === 999 ? null : Math.round(d), motivos };
+}
+
+/* ---------- Motor A: análisis por rúbrica ---------- */
+function analizarRespuesta(texto, config) {
+  const largo = nPalabras(texto);
+  const copiaPct = copiaLiteral(texto, config.fragmento);
+  const terminosDet = detectarTerminos(texto, config.terminos);
+  const totalTerm = (config.terminos || '').split(',').map(s => s.trim()).filter(Boolean).length || 1;
+  const cobertura = terminosDet.length / totalTerm;
+  const mIdea = contarMarcadores(texto, M_IDEA);
+  const mInf = contarMarcadores(texto, M_INF);
+  const mArg = contarMarcadores(texto, M_ARG);
+  const mEv = contarMarcadores(texto, M_EV);
+  const mCon = contarMarcadores(texto, M_CON);
+  const ctx = { largo, copiaPct, ocr: false, terminosDet };
+
+  /* Idea principal */
+  let sIdea = cobertura * 55 + Math.min(mIdea.length, 2) * 14 + Math.min(largo / 45, 1) * 31;
+  if (largo < 5) sIdea = Math.min(sIdea, 14);
+  if (copiaPct > 60) sIdea = Math.min(sIdea, 50);
+
+  /* Inferencia */
+  let sInf = Math.min(mInf.length, 3) * 19 + (1 - copiaPct / 100) * 34 + Math.min(largo / 55, 1) * 27;
+  if (largo < 5) sInf = Math.min(sInf, 12);
+  if (copiaPct > 60) sInf = Math.min(sInf, 45);
+
+  /* Argumentación */
+  let sArg = Math.min(mArg.length, 2) * 17 + Math.min(mEv.length, 2) * 17 + Math.min(mCon.length, 2) * 9
+           + (1 - copiaPct / 100) * 23 + Math.min(largo / 65, 1) * 12;
+  if (largo < 5) sArg = Math.min(sArg, 12);
+  if (mArg.length === 0 && mEv.length === 0) sArg = Math.min(sArg, 38);
+  if (copiaPct > 60) sArg = Math.min(sArg, 45);
+
+  const cfgs = [
+    { k: 'idea', score: sIdea, marcadores: mIdea },
+    { k: 'inf', score: sInf, marcadores: mInf },
+    { k: 'arg', score: sArg, marcadores: mArg.concat(mEv, mCon) }
+  ];
+
+  const criterios = {};
+  cfgs.forEach(c => {
+    const r = clasificar(Math.max(0, Math.min(100, c.score)), ctx);
+    criterios[c.k] = {
+      nivel: r.nivel,
+      puntaje: Math.round(Math.max(0, Math.min(100, c.score))),
+      semaforo: r.semaforo,
+      motivos: r.motivos,
+      marcadores: c.marcadores,
+      observacion: observacion(c.k, r.nivel, { largo, copiaPct, terminosDet, marcadores: c.marcadores })
+    };
+  });
+
+  const orden = { verde: 0, amarillo: 1, rojo: 2 };
+  let semaforo = 'verde';
+  Object.keys(criterios).forEach(k => { if (orden[criterios[k].semaforo] > orden[semaforo]) semaforo = criterios[k].semaforo; });
+  if (ctx.ocr) semaforo = 'rojo';
+
+  return { criterios, semaforo, largo, copiaPct, terminosDet, motor: 'Motor A · Análisis por rúbrica' };
+}
+
+function observacion(k, nivel, ctx) {
+  const t = ctx.terminosDet.length ? ctx.terminosDet.slice(0, 3).join(', ') : '';
+  const cita = ctx.marcadores && ctx.marcadores.length ? ctx.marcadores.slice(0, 2).map(m => '«' + m + '»').join(' y ') : '';
+  let o = '';
+  if (k === 'idea') {
+    if (nivel === 4) o = 'Formulas el tema central del texto con precisión' + (t ? ' y te anclas en elementos clave (' + t + ')' : '') + '. Tu respuesta distingue el tema de los detalles del capítulo. Acción concreta: abre tu próxima respuesta con esa misma oración de síntesis y deja el ejemplo para después.';
+    else if (nivel === 3) o = 'Reconoces el tema central' + (t ? ' (' + t + ')' : '') + ', pero aparece mezclado con detalles del capítulo que compiten con la idea. Acción concreta: escribe primero una sola oración con el tema y deja los detalles para el párrafo siguiente.';
+    else if (nivel === 2) o = 'Tu respuesta menciona elementos y escenas del texto, pero no alcanza a formular el tema central: describir lo que pasa no es lo mismo que decir de qué trata. Acción concreta: completa en tu cuaderno la frase «Este capítulo trata de ___ y lo que quiere mostrar es ___» y usa esa frase para abrir tu respuesta.';
+    else o = 'En tu respuesta no es posible identificar el tema central del texto' + (ctx.largo < 5 ? ': es demasiado corta para valorarla' : ': lo que escribiste no se conecta con el contenido del capítulo') + '. Acción concreta: vuelve al texto, subraya la oración que te parezca más importante y escribe el tema en tus palabras.';
+  } else if (k === 'inf') {
+    if (nivel === 4) o = 'Vas más allá de lo que el texto dice literalmente y construyes una inferencia propia' + (cita ? ', apoyada en expresiones como ' + cita : '') + '. Es el nivel esperado para este control. Acción concreta: sigue señalando de dónde sacaste la deducción, como lo hiciste aquí.';
+    else if (nivel === 3) o = 'Infieres una idea que no está escrita de forma explícita' + (cita ? ' y la apoyas con expresiones como ' + cita : '') + ', aunque la conexión con el texto podría ser más firme. Acción concreta: agrega el indicio del capítulo que te llevó a esa conclusión.';
+    else if (nivel === 2) o = 'Tu respuesta se queda en el nivel literal: cuentas lo que dice el texto sin deducir nada nuevo. Acción concreta: pregúntate «¿qué quiso dar a entender el autor con esto?» y responde con la fórmula «Se puede inferir que… porque en el texto…».';
+    else o = 'No hay evidencia de que hayas comprendido el texto: ' + (ctx.largo < 5 ? 'la respuesta es demasiado corta' : 'lo escrito no retoma el contenido del capítulo') + '. Acción concreta: lee otra vez el fragmento, cuenta con tus palabras qué pasó y sobre eso construimos la inferencia.';
+  } else {
+    if (nivel === 4) o = 'Argumentas con estructura completa: planteas tu postura, la sostienes con una razón tomada del texto' + (cita ? ' (' + cita + ')' : '') + ' y cierras confirmando tu idea. Es el nivel esperado. Acción concreta: conserva ese orden postura → razón → cierre.';
+    else if (nivel === 3) o = 'Das una razón que apoya tu respuesta' + (cita ? ' (' + cita + ')' : '') + ', pero no señalas el pasaje del texto que la respalda. Acción concreta: agrega «…como se ve cuando» y el momento del capítulo que lo demuestra.';
+    else if (nivel === 2) o = 'Expresas una opinión sin justificarla con razones sacadas del texto' + (ctx.marcadores && ctx.marcadores.length ? '' : ' (no aparecen conectores como «porque» o «ya que» en tu respuesta)') + '. Acción concreta: a cada opinión agrégale un «porque…» con algo del capítulo.';
+    else o = 'No justificas tu respuesta: no se alcanza a ver en qué te apoyas. Acción concreta: escribe primero qué piensas y después una razón que empiece con «porque».';
+  }
+  if (ctx.copiaPct > 60) o += ' Nota para el docente: esta respuesta reproduce el fragmento del texto en un ' + ctx.copiaPct + ' %, por eso el nivel se limitó a 2.';
+  return o;
+}
+
+/* Aplica un resultado a la respuesta, forzando la certeza roja cuando la
+   transcripción proviene de una digitalización con señales de error. */
+function aplicarResultado(r, resultado) {
+  resultado.ocr = !!r.ocr;
+  if (r.ocr) {
+    resultado.semaforo = 'rojo';
+    Object.keys(resultado.criterios).forEach(k => {
+      resultado.criterios[k].semaforo = 'rojo';
+      resultado.criterios[k].motivos.push('la respuesta proviene de una digitalización con señales de error de reconocimiento');
+    });
+  }
+  r.semaforo = resultado.semaforo;
+  return resultado;
+}
+
+/* ---------- Motor B: IA generativa ---------- */
+function construirPrompt(texto, config) {
+  const r = config.rubrica;
+  return 'Eres un docente de Lengua Castellana de bachillerato en Colombia. Evalúa la respuesta abierta de un estudiante de grado 11° de un control de lectura.\n\n' +
+    'TEXTO EVALUADO: ' + config.texto + '\n' +
+    'GÉNERO TEXTUAL: ' + config.genero + '\n' +
+    'PREGUNTA DEL CONTROL: la respuesta corresponde a una pregunta abierta de comprensión lectora.\n' +
+    'FRAGMENTO LEÍDO POR LOS ESTUDIANTES: ' + config.fragmento + '\n\n' +
+    'RÚBRICA DEL CURSO (cuatro niveles por criterio):\n' +
+    'IDEA PRINCIPAL — N4: ' + r.idea.niveles[4] + ' | N3: ' + r.idea.niveles[3] + ' | N2: ' + r.idea.niveles[2] + ' | N1: ' + r.idea.niveles[1] + '\n' +
+    'INFERENCIA — N4: ' + r.inf.niveles[4] + ' | N3: ' + r.inf.niveles[3] + ' | N2: ' + r.inf.niveles[2] + ' | N1: ' + r.inf.niveles[1] + '\n' +
+    'ARGUMENTACIÓN — N4: ' + r.arg.niveles[4] + ' | N3: ' + r.arg.niveles[3] + ' | N2: ' + r.arg.niveles[2] + ' | N1: ' + r.arg.niveles[1] + '\n\n' +
+    'RESPUESTA DEL ESTUDIANTE:\n"""' + texto + '"""\n\n' +
+    'Reglas: la observación debe estar dirigida al estudiante, en segunda persona, en español, máximo 60 palabras, y debe terminar con una acción concreta para mejorar. No inventes datos del texto. Si la respuesta es muy corta o reproduce el fragmento, márcala como dudosa.\n' +
+    'Responde ÚNICAMENTE con este JSON, sin texto adicional:\n' +
+    '{"idea_principal":{"nivel":1,"observacion":"...","certeza":"verde"},"inferencia":{"nivel":1,"observacion":"...","certeza":"verde"},"argumentacion":{"nivel":1,"observacion":"...","certeza":"verde"},"sintesis":"..."}';
+}
+
+async function analizarConIA(texto, config) {
+  const proveedor = document.getElementById('cfgProveedor').value;
+
+  /* Modo simulado: permite demostrar el flujo del motor de IA sin clave,
+     manteniendo el mismo contrato de salida. Se identifica como simulado. */
+  const clave = (document.getElementById('cfgApiKey').value || '').trim();
+  if (!clave) return analizarSimulado(texto, config, proveedor);
+
+  const prompt = construirPrompt(texto, config);
+  if (proveedor === 'gemini') {
+    const modelo = (document.getElementById('cfgModelo').value || 'gemini-2.5-flash').trim();
+    const url = 'https://generativelanguage.googleapis.com/v1beta/models/' + modelo + ':generateContent?key=' + encodeURIComponent(clave);
+    const resp = await fetch(url, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: prompt }] }],
+        generationConfig: { temperature: 0.2, responseMimeType: 'application/json' }
+      })
+    });
+    if (!resp.ok) throw new Error('El servicio respondió con código ' + resp.status);
+    const data = await resp.json();
+    const txt = (((data.candidates || [])[0] || {}).content || {}).parts?.[0]?.text || '';
+    return normalizarSalidaIA(JSON.parse(txt));
+  }
+  const base = (document.getElementById('cfgBaseURL').value || 'https://api.openai.com/v1').replace(/\/$/, '');
+  const modelo = (document.getElementById('cfgModelo').value || 'gpt-4o-mini').trim();
+  const resp = await fetch(base + '/chat/completions', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + clave },
+    body: JSON.stringify({
+      model: modelo, temperature: 0.2,
+      messages: [{ role: 'user', content: prompt }],
+      response_format: { type: 'json_object' }
+    })
+  });
+  if (!resp.ok) throw new Error('El servicio respondió con código ' + resp.status);
+  const data = await resp.json();
+  return normalizarSalidaIA(JSON.parse(data.choices[0].message.content));
+}
+
+/* Salida del motor de IA cuando no hay clave configurada: se construye con el
+   mismo análisis por rúbrica y se identifica explícitamente como simulación. */
+function analizarSimulado(texto, config, proveedor) {
+  const base = analizarRespuesta(texto, config);
+  base.motor = 'Motor B · IA generativa (SIMULADO: no se configuró clave)';
+  base.simulado = true;
+  base.criterios.idea.observacion += ' [Salida simulada para la demostración del flujo: al configurar una clave, esta observación la redacta el modelo.]';
+  return base;
+}
+
+function normalizarSalidaIA(j) {
+  const mapa = { idea: j.idea_principal, inf: j.inferencia, arg: j.argumentacion };
+  const criterios = {};
+  const orden = { verde: 0, amarillo: 1, rojo: 2 };
+  let semaforo = 'verde';
+  ['idea', 'inf', 'arg'].forEach(k => {
+    const o = mapa[k] || {};
+    const nivel = Math.max(1, Math.min(4, parseInt(o.nivel, 10) || 1));
+    const cer = ['verde', 'amarillo', 'rojo'].includes(o.certeza) ? o.certeza : 'amarillo';
+    criterios[k] = { nivel: nivel, puntaje: null, semaforo: cer, motivos: ['clasificación dada por el modelo'], marcadores: [], observacion: String(o.observacion || '') };
+    if (orden[cer] > orden[semaforo]) semaforo = cer;
+  });
+  return { criterios: criterios, semaforo: semaforo, largo: null, copiaPct: null, terminosDet: [], motor: 'Motor B · IA generativa', sintesis: j.sintesis || '' };
+}
+
+/* ---------- Navegación ---------- */
+function cambiarRol(rol) {
+  document.querySelectorAll('.rol-btn').forEach(b => {
+    const act = b.dataset.rol === rol;
+    b.classList.toggle('activo', act); b.setAttribute('aria-selected', act ? 'true' : 'false');
+  });
+  document.querySelectorAll('.rol-panel').forEach(p => p.classList.remove('activo'));
+  const panel = document.getElementById('vista-' + rol);
+  if (panel) panel.classList.add('activo');
+  if (rol === 'sistema') { renderSistema(); }
+  if (rol === 'estudiante') { renderSelectoresEstudiante(); }
+}
+function cambiarPaso(n) {
+  document.querySelectorAll('.paso-btn').forEach(b => b.classList.toggle('activo', parseInt(b.dataset.paso, 10) === n));
+  document.querySelectorAll('.paso-panel').forEach(p => p.classList.remove('activo'));
+  const el = document.getElementById('paso-' + n);
+  if (el) el.classList.add('activo');
+  if (n === 4) renderRevision();
+  if (n === 5) { if (E.ultimoProceso) generarReporte(); }
+}
+function aviso(id, texto, tipo) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.textContent = texto;
+  el.className = 'aviso visible ' + (tipo || '');
+}
+
+/* ---------- Paso 1: configuración ---------- */
+function renderEditorRubrica() {
+  const cont = document.getElementById('editorRubrica');
+  const nombres = { idea: 'Idea principal', inf: 'Inferencia', arg: 'Argumentación' };
+  let html = '';
+  Object.keys(nombres).forEach(k => {
+    html += '<div class="criterio-editor"><h4>' + nombres[k] + '</h4>';
+    [4, 3, 2, 1].forEach(n => {
+      html += '<div class="campo"><label for="rub_' + k + '_' + n + '">Nivel ' + n + ' — ' + nivelNombre(n) + '</label>' +
+        '<textarea id="rub_' + k + '_' + n + '" rows="2" onchange="cambiarDescriptor(\'' + k + '\',' + n + ',this.value)">' +
+        (E.config.rubrica[k].niveles[n] || '') + '</textarea></div>';
+    });
+    html += '</div>';
+  });
+  cont.innerHTML = html;
+}
+function nivelNombre(n) {
+  return { 4: 'Superior', 3: 'Alto', 2: 'Básico', 1: 'Bajo' }[n];
+}
+function cambiarDescriptor(k, n, v) {
+  E.config.rubrica[k].niveles[n] = v; guardarEstado();
+  aviso('avisoCfg', 'Descriptor del nivel ' + n + ' actualizado. Los próximos análisis usarán esta versión.', 'ok');
+}
+function cargarConfigEnFormulario() {
+  document.getElementById('cfgTexto').value = E.config.texto;
+  document.getElementById('cfgGenero').value = E.config.genero;
+  document.getElementById('cfgGrado').value = E.config.grado;
+  document.getElementById('cfgTerminos').value = E.config.terminos;
+  document.getElementById('cfgFragmento').value = E.config.fragmento;
+  const e = ESPERADO[E.config.genero] || ESPERADO.narrativo;
+  document.getElementById('esperadoGenero').textContent =
+    'idea principal nivel ' + e.idea + ' · inferencia nivel ' + e.inf + ' · argumentación nivel ' + e.arg + '. ' + e.nota;
+}
+function guardarConfig() {
+  E.config.texto = document.getElementById('cfgTexto').value.trim();
+  E.config.genero = document.getElementById('cfgGenero').value;
+  E.config.grado = document.getElementById('cfgGrado').value.trim();
+  E.config.terminos = document.getElementById('cfgTerminos').value.trim();
+  E.config.fragmento = document.getElementById('cfgFragmento').value.trim();
+  guardarEstado(); cargarConfigEnFormulario();
+  aviso('avisoCfg', 'Configuración guardada. El sistema analizará las respuestas con estos criterios.', 'ok');
+}
+function restaurarConfig() {
+  E.config = JSON.parse(JSON.stringify(CONFIG_BASE));
+  guardarEstado(); cargarConfigEnFormulario(); renderEditorRubrica();
+  aviso('avisoCfg', 'Se restauró la configuración del diseño curricular de la Semana 3.', 'ok');
+}
+
+/* ---------- Paso 2: digitalización ---------- */
+function mostrarImagen(input) {
+  const img = document.getElementById('previewImg');
+  if (input.files && input.files[0]) {
+    img.src = URL.createObjectURL(input.files[0]); img.hidden = false;
+    aviso('avisoOCR', 'Fotografía cargada. Puede reconocer el texto con el botón de reconocimiento óptico o transcribirlo a mano.', '');
+  }
+}
+async function ejecutarOCR() {
+  const input = document.getElementById('cargaArchivo');
+  if (!input.files || !input.files[0]) { aviso('avisoOCR', 'Primero cargue la fotografía del control.', 'alerta'); return; }
+  aviso('avisoOCR', 'Cargando el reconocedor de texto…', '');
+  try {
+    if (!window.Tesseract) {
+      await new Promise((res, rej) => {
+        const s = document.createElement('script');
+        s.src = 'https://cdn.jsdelivr.net/npm/tesseract.js@5.1.0/dist/tesseract.min.js';
+        s.onload = res; s.onerror = () => rej(new Error('sin conexión'));
+        document.head.appendChild(s);
+      });
+    }
+    aviso('avisoOCR', 'Reconociendo el texto de la imagen… esto puede tardar unos segundos.', '');
+    const r = await Tesseract.recognize(input.files[0], 'spa');
+    const t = (r.data.text || '').replace(/\s+/g, ' ').trim();
+    document.getElementById('cargaTexto').value = t;
+    document.getElementById('chkVerificada').checked = false;
+    aviso('avisoOCR', 'Texto reconocido. Ahora compárelo con la fotografía, corrija lo que haga falta y marque la casilla de verificación: es un paso obligatorio.', 'alerta');
+  } catch (e) {
+    aviso('avisoOCR', 'No fue posible reconocer el texto (la caligrafía o la conexión pueden impedirlo). Transcriba la respuesta a mano y siga el flujo: la verificación humana del diseño curricular cubre este caso.', 'alerta');
+  }
+}
+function agregarRespuesta() {
+  const codigo = document.getElementById('cargaCodigo').value.trim();
+  const pregunta = document.getElementById('cargaPregunta').value.trim();
+  const texto = document.getElementById('cargaTexto').value.trim();
+  const verif = document.getElementById('chkVerificada').checked;
+  if (!codigo) { aviso('avisoCarga', 'Escriba el código del estudiante (no el nombre, para proteger sus datos).', 'alerta'); return; }
+  if (!texto) { aviso('avisoCarga', 'No hay respuesta que agregar. Si el estudiante dejó la pregunta en blanco, escriba "En blanco" para que quede registrado.', 'alerta'); return; }
+  if (!verif) { aviso('avisoCarga', 'Antes de agregar la respuesta debe marcar la casilla de verificación de la transcripción. El diseño curricular exige ese control para que un error de digitalización no genere una observación equivocada.', 'alerta'); return; }
+  E.respuestas.push({
+    id: 'r' + Date.now() + Math.random().toString(36).slice(2, 6),
+    codigo: codigo.toUpperCase(), pregunta: pregunta || 'Pregunta abierta del control', texto: texto,
+    verificada: true, ocr: false, resultado: null, obsEditada: null, aprobada: false,
+    auditada: false, discrepancia: false, publicado: false, fecha: new Date().toISOString()
+  });
+  guardarEstado(); renderBandeja();
+  document.getElementById('cargaCodigo').value = ''; document.getElementById('cargaTexto').value = '';
+  document.getElementById('chkVerificada').checked = false;
+  document.getElementById('previewImg').hidden = true; document.getElementById('cargaArchivo').value = '';
+  aviso('avisoCarga', 'Respuesta de ' + codigo.toUpperCase() + ' agregada a la bandeja.', 'ok');
+}
+function cargarEjemploUno() {
+  const d = DEMO[0];
+  document.getElementById('cargaCodigo').value = d.codigo;
+  document.getElementById('cargaPregunta').value = d.pregunta;
+  document.getElementById('cargaTexto').value = d.texto;
+  document.getElementById('chkVerificada').checked = true;
+  aviso('avisoCarga', 'Ejemplo cargado. Ya puede agregarlo a la bandeja.', 'ok');
+}
+function cargarLote() {
+  const raw = document.getElementById('loteTexto').value.trim();
+  if (!raw) { aviso('avisoLote', 'Pegue las respuestas con el formato código | pregunta | respuesta.', 'alerta'); return; }
+  let n = 0;
+  raw.split(/\n+/).forEach(linea => {
+    const p = linea.split('|');
+    if (p.length >= 2) {
+      const codigo = (p[0] || '').trim();
+      const pregunta = p.length >= 3 ? (p[1] || '').trim() : 'Pregunta abierta del control';
+      const texto = (p.length >= 3 ? p.slice(2).join('|') : p.slice(1).join('|')).trim();
+      if (codigo) {
+        E.respuestas.push({
+          id: 'r' + Date.now() + Math.random().toString(36).slice(2, 6) + n,
+          codigo: codigo.toUpperCase(), pregunta: pregunta || 'Pregunta abierta del control',
+          texto: texto, verificada: true, ocr: false, resultado: null, obsEditada: null,
+          aprobada: false, auditada: false, discrepancia: false, publicado: false, fecha: new Date().toISOString()
+        });
+        n++;
+      }
+    }
+  });
+  guardarEstado(); renderBandeja();
+  aviso('avisoLote', n + ' respuesta(s) agregada(s) desde el lote. Se registran como transcripciones verificadas.', 'ok');
+}
+function cargarDemostracion() {
+  E = estadoInicial();
+  E.config = JSON.parse(JSON.stringify(CONFIG_BASE));
+  DEMO.forEach((d, i) => {
+    E.respuestas.push({
+      id: 'demo' + i, codigo: d.codigo, pregunta: d.pregunta, texto: d.texto,
+      verificada: d.verificada, ocr: d.ocr, resultado: null, obsEditada: null,
+      aprobada: false, auditada: false, discrepancia: false, publicado: false, fecha: new Date().toISOString()
+    });
+  });
+  guardarEstado();
+  cargarConfigEnFormulario(); renderEditorRubrica(); renderBandeja();
+  const t0 = performance.now();
+  E.respuestas.forEach(r => { r.resultado = aplicarResultado(r, analizarRespuesta(r.texto, E.config)); });
+  const ms = Math.round(performance.now() - t0);
+  /* Para la demostración se aprueban los casos de certeza verde y se dejan
+     los amarillos y rojos para la revisión del docente. */
+  let aprob = 0, pend = 0;
+  E.respuestas.forEach(r => {
+    if (r.resultado.semaforo === 'verde') { r.aprobada = true; r.publicado = true; aprob++; } else { pend++; }
+  });
+  E.ultimoProceso = { ms: ms, n: E.respuestas.length, motor: 'Motor A · Análisis por rúbrica', fecha: new Date().toISOString() };
+  guardarEstado();
+  renderBandeja(); renderRevision(); renderSistema(); generarReporte();
+  aviso('avisoRevision', 'Demostración cargada: ' + E.respuestas.length + ' respuestas procesadas en ' + ms + ' ms. Se aprobaron ' + aprob + ' casos de certeza verde y quedan ' + pend + ' casos amarillos o rojos pendientes de su revisión.', 'ok');
+  cambiarRol('docente'); cambiarPaso(4);
+}
+function renderBandeja() {
+  const tb = document.getElementById('tablaBandeja');
+  const cont = document.getElementById('contadorBandeja');
+  if (cont) cont.textContent = E.respuestas.length + (E.respuestas.length === 1 ? ' respuesta' : ' respuestas');
+  if (!E.respuestas.length) {
+    tb.innerHTML = '<tr><td colspan="5" class="vacio">Aún no hay respuestas en la bandeja. Digitalice una respuesta o cargue la demostración.</td></tr>';
+    return;
+  }
+  tb.innerHTML = E.respuestas.map(r => {
+    const estado = !r.verificada
+      ? '<span class="pill p-rojo">Sin verificar</span>'
+      : (r.ocr ? '<span class="pill p-amarillo">Digitalizada (OCR)</span>' : '<span class="pill p-verde">Verificada</span>');
+    const proc = r.resultado ? '<span class="pill p-azul">Procesada</span>' : '';
+    const btn = r.verificada ? '' : ' <button class="btn btn-gris btn-chico" type="button" onclick="verificarFila(\'' + r.id + '\')">Verificar</button>';
+    const txt = r.texto ? (r.texto.length > 150 ? r.texto.slice(0, 150) + '…' : r.texto) : '<em>(respuesta en blanco)</em>';
+    return '<tr><td><strong>' + r.codigo + '</strong></td><td><small>' + r.pregunta + '</small></td><td>' + txt + '</td>' +
+      '<td>' + estado + ' ' + proc + btn + '</td>' +
+      '<td><button class="btn btn-gris btn-chico" type="button" onclick="quitarFila(\'' + r.id + '\')" aria-label="Quitar la respuesta de ' + r.codigo + '">Quitar</button></td></tr>';
+  }).join('');
+}
+function verificarFila(id) {
+  const r = E.respuestas.find(x => x.id === id);
+  if (r) { r.verificada = true; guardarEstado(); renderBandeja(); aviso('avisoCarga', 'Transcripción de ' + r.codigo + ' marcada como verificada.', 'ok'); }
+}
+function quitarFila(id) {
+  E.respuestas = E.respuestas.filter(x => x.id !== id);
+  guardarEstado(); renderBandeja(); renderRevision();
+}
+function vaciarBandeja() {
+  E.respuestas = []; E.auditoria = []; E.ultimoProceso = null; E.publicado = false;
+  guardarEstado(); renderBandeja(); renderRevision();
+  aviso('avisoCarga', 'Bandeja vaciada.', 'ok');
+}
+
+/* ---------- Paso 3: procesamiento ---------- */
+document.addEventListener('change', ev => {
+  if (ev.target && ev.target.name === 'motor') {
+    const esIA = ev.target.value === 'ia';
+    const cfg = document.getElementById('cfgIA');
+    if (cfg) cfg.hidden = !esIA;
+  }
+});
+
+async function procesarBandeja() {
+  if (!E.respuestas.length) { aviso('avisoRevision', 'Primero cargue respuestas en la bandeja.', 'alerta'); cambiarPaso(2); return; }
+  const motor = (document.querySelector('input[name="motor"]:checked') || {}).value || 'local';
+  const noVerif = E.respuestas.filter(r => !r.verificada);
+  const aProcesar = E.respuestas.filter(r => r.verificada);
+  const log = document.getElementById('logProceso');
+  const barra = document.getElementById('barraProceso');
+  let lineas = [];
+  if (noVerif.length) {
+    lineas.push('⚠ ' + noVerif.length + ' respuesta(s) quedaron fuera del lote por no tener la transcripción verificada: ' + noVerif.map(r => r.codigo).join(', ') + '.');
+  }
+  const t0 = performance.now();
+  for (let i = 0; i < aProcesar.length; i++) {
+    const r = aProcesar[i];
+    try {
+      if (motor === 'ia') {
+        r.resultado = await analizarConIA(r.texto, E.config);
+      } else {
+        aplicarResultado(r, analizarRespuesta(r.texto, E.config));
+      }
+      r.obsEditada = null; r.aprobada = false; r.publicado = false; r.auditada = false;
+      r.semaforo = r.resultado.semaforo;
+      lineas.push('✔ ' + r.codigo + ' procesada · semáforo ' + r.resultado.semaforo + ' · niveles ' +
+        Object.keys(r.resultado.criterios).map(k => r.resultado.criterios[k].nivel).join(' · '));
+    } catch (err) {
+      lineas.push('✖ ' + r.codigo + ' no pudo procesarse con el motor de IA (' + err.message + '). Puede reprocesar ese caso con el motor de análisis por rúbrica.');
+    }
+    if (barra) barra.style.width = Math.round((i + 1) / aProcesar.length * 100) + '%';
+    log.innerHTML = lineas.join('<br>');
+  }
+  const ms = Math.round(performance.now() - t0);
+  E.ultimoProceso = { ms: ms, n: aProcesar.length, motor: motor === 'ia' ? 'Motor B · IA generativa' : 'Motor A · Análisis por rúbrica', fecha: new Date().toISOString() };
+  lineas.push('<strong>Listo:</strong> ' + aProcesar.length + ' respuesta(s) en ' + ms + ' ms con el ' + E.ultimoProceso.motor + '. Tiempo de referencia del flujo actual: varios días.');
+  log.innerHTML = lineas.join('<br>');
+  guardarEstado(); renderBandeja(); renderRevision(); renderSistema();
+  cambiarPaso(4);
+}
+
+/* ---------- Paso 4: revisión docente ---------- */
+function obsDe(r, k) {
+  return (r.obsEditada && r.obsEditada[k] != null) ? r.obsEditada[k] : r.resultado.criterios[k].observacion;
+}
+function renderRevision() {
+  const proc = E.respuestas.filter(r => r.resultado);
+  const cuenta = { verde: 0, amarillo: 0, rojo: 0 };
+  proc.forEach(r => { cuenta[r.resultado.semaforo] = (cuenta[r.resultado.semaforo] || 0) + 1; });
+  const c1 = document.getElementById('contVerde'), c2 = document.getElementById('contAmarillo'),
+        c3 = document.getElementById('contRojo'), c4 = document.getElementById('contAprobadas');
+  if (c1) c1.textContent = cuenta.verde + ' verdes';
+  if (c2) c2.textContent = cuenta.amarillo + ' amarillos';
+  if (c3) c3.textContent = cuenta.rojo + ' rojos';
+  if (c4) c4.textContent = E.respuestas.filter(r => r.aprobada).length + ' aprobadas';
+
+  const soloPend = document.getElementById('filtroSemaforo');
+  const lista = document.getElementById('listaRevision');
+  let visibles = proc;
+  if (soloPend && soloPend.checked) visibles = proc.filter(r => r.resultado.semaforo !== 'verde' || !r.aprobada);
+  if (!visibles.length) {
+    lista.innerHTML = '<p class="ayuda">No hay observaciones por revisar con este filtro. Cargue respuestas y procéselas en el paso 3.</p>';
+    return;
+  }
+  const NOMBRES = { idea: 'Idea principal', inf: 'Inferencia', arg: 'Argumentación' };
+  lista.innerHTML = visibles.map(r => {
+    const crit = ['idea', 'inf', 'arg'].map(k => {
+      const c = r.resultado.criterios[k];
+      const sel = [4, 3, 2, 1].map(n => '<option value="' + n + '"' + (n === c.nivel ? ' selected' : '') + '>Nivel ' + n + ' · ' + nivelNombre(n) + '</option>').join('');
+      const motivos = (c.motivos && c.motivos.length) ? '<p class="motivos"><strong>Por qué este nivel de certeza:</strong> ' + c.motivos.join('; ') + '.</p>' : '';
+      return '<div class="crit">' +
+        '<div class="crit-head"><h5>' + NOMBRES[k] + '</h5>' +
+        '<label class="sr" for="sel_' + r.id + '_' + k + '">Nivel asignado en ' + NOMBRES[k] + '</label>' +
+        '<select id="sel_' + r.id + '_' + k + '" onchange="setNivel(\'' + r.id + '\',\'' + k + '\',this.value)">' + sel + '</select>' +
+        '<span class="pill p-' + c.semaforo + '">' + c.semaforo + '</span></div>' +
+        '<label class="sr" for="obs_' + r.id + '_' + k + '">Observación para el estudiante en ' + NOMBRES[k] + '</label>' +
+        '<textarea id="obs_' + r.id + '_' + k + '" rows="3" onchange="setObs(\'' + r.id + '\',\'' + k + '\',this.value)">' + obsDe(r, k) + '</textarea>' + motivos + '</div>';
+    }).join('');
+    const marcas = [];
+    if (r.auditada) marcas.push('<span class="pill p-azul">Auditada al azar</span>');
+    if (r.discrepancia) marcas.push('<span class="pill p-rojo">Discrepancia registrada</span>');
+    if (r.aprobada) marcas.push('<span class="pill p-verde">Aprobada</span>');
+    if (r.publicado) marcas.push('<span class="pill p-azul">Visible para el estudiante</span>');
+    if (!r.verificada) marcas.push('<span class="pill p-rojo">Transcripción sin verificar</span>');
+    return '<article class="card-obs borde-' + r.resultado.semaforo + '">' +
+      '<header class="card-obs-head">' +
+        '<div><strong class="codigo">' + r.codigo + '</strong> <span class="pill p-' + r.resultado.semaforo + '">certeza ' + r.resultado.semaforo + '</span> <span class="pill p-gris">' + r.resultado.motor + '</span> ' + marcas.join(' ') + '</div>' +
+        '<div class="mini-acciones">' +
+          '<button class="btn btn-azul btn-chico" type="button" onclick="aprobar(\'' + r.id + '\')">' + (r.aprobada ? '✔ Aprobada' : 'Aprobar observación') + '</button>' +
+          '<button class="btn btn-gris btn-chico" type="button" onclick="alternarDiscrepancia(\'' + r.id + '\')">' + (r.discrepancia ? 'Quitar discrepancia' : 'Registrar discrepancia') + '</button>' +
+        '</div>' +
+      '</header>' +
+      '<p class="pregunta"><strong>Pregunta:</strong> ' + r.pregunta + '</p>' +
+      '<blockquote class="respuesta">' + (r.texto ? r.texto : '<em>Respuesta sin contenido.</em>') + '</blockquote>' +
+      '<p class="metricas">Palabras: ' + (r.resultado.largo != null ? r.resultado.largo : '—') +
+        ' · Coincidencia con el fragmento del texto: ' + (r.resultado.copiaPct != null ? r.resultado.copiaPct + ' %' : '—') +
+        ' · Términos clave detectados: ' + ((r.resultado.terminosDet || []).join(', ') || 'ninguno') + '</p>' +
+      '<div class="criterios">' + crit + '</div>' +
+    '</article>';
+  }).join('');
+}
+function setNivel(id, k, v) {
+  const r = E.respuestas.find(x => x.id === id);
+  if (!r || !r.resultado) return;
+  r.resultado.criterios[k].nivel = parseInt(v, 10);
+  r.resultado.criterios[k].ajustadoPorDocente = true;
+  guardarEstado();
+  aviso('avisoRevision', 'Nivel de ' + ({ idea: 'idea principal', inf: 'inferencia', arg: 'argumentación' }[k]) + ' de ' + r.codigo + ' ajustado a ' + v + ' por criterio del docente.', 'ok');
+}
+function setObs(id, k, v) {
+  const r = E.respuestas.find(x => x.id === id);
+  if (!r) return;
+  if (!r.obsEditada) r.obsEditada = {};
+  r.obsEditada[k] = v; r.aprobada = false; r.publicado = false;
+  guardarEstado();
+}
+function aprobar(id) {
+  const r = E.respuestas.find(x => x.id === id);
+  if (!r) return;
+  r.aprobada = !r.aprobada;
+  if (!r.aprobada) r.publicado = false;
+  guardarEstado(); renderRevision();
+}
+function alternarDiscrepancia(id) {
+  const r = E.respuestas.find(x => x.id === id);
+  if (!r) return;
+  r.discrepancia = !r.discrepancia;
+  if (r.discrepancia && !E.auditoria.includes(r.id)) E.auditoria.push(r.id);
+  guardarEstado(); renderRevision(); renderSistema();
+  aviso('avisoRevision', r.discrepancia
+    ? 'Discrepancia registrada en ' + r.codigo + '. El diseño curricular indica ajustar la rúbrica o las instrucciones y reprocesar el lote.'
+    : 'Discrepancia retirada en ' + r.codigo + '.', r.discrepancia ? 'alerta' : 'ok');
+}
+function auditarMuestra() {
+  const verdes = E.respuestas.filter(r => r.resultado && r.resultado.semaforo === 'verde' && !r.auditada);
+  if (!verdes.length) { aviso('avisoRevision', 'No hay casos de certeza verde pendientes de auditar.', 'alerta'); return; }
+  const n = Math.max(1, Math.round(verdes.length * 0.2));
+  const copia = verdes.slice();
+  for (let i = copia.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [copia[i], copia[j]] = [copia[j], copia[i]]; }
+  copia.slice(0, n).forEach(r => { r.auditada = true; if (!E.auditoria.includes(r.id)) E.auditoria.push(r.id); });
+  guardarEstado(); renderRevision(); renderSistema();
+  aviso('avisoRevision', 'Se seleccionaron al azar ' + n + ' de ' + verdes.length + ' casos de certeza verde para auditoría (20 %). Revise que la observación corresponda a lo que escribió el estudiante y registre cualquier discrepancia.', 'ok');
+}
+function aprobarTodosVerdes() {
+  let n = 0;
+  E.respuestas.forEach(r => { if (r.resultado && r.resultado.semaforo === 'verde' && !r.aprobada) { r.aprobada = true; n++; } });
+  guardarEstado(); renderRevision();
+  aviso('avisoRevision', n + ' caso(s) de certeza verde aprobados sin cambios. Los casos amarillos y rojos requieren revisión individual.', 'ok');
+}
+function publicarEstudiantes() {
+  const ap = E.respuestas.filter(r => r.aprobada);
+  if (!ap.length) { aviso('avisoReporte', 'Todavía no hay observaciones aprobadas. Ninguna observación llega al estudiante sin aprobación del docente.', 'alerta'); return; }
+  ap.forEach(r => { r.publicado = true; });
+  guardarEstado(); renderRevision();
+  aviso('avisoReporte', ap.length + ' observación(es) aprobadas quedaron disponibles en el rol estudiante.', 'ok');
+}
+
+/* ---------- Paso 5: reporte del curso ---------- */
+const NOMBRE_CRIT = { idea: 'Idea principal', inf: 'Inferencia', arg: 'Argumentación' };
+function procesadas() { return E.respuestas.filter(r => r.resultado); }
+function generarReporte() {
+  const p = procesadas();
+  const cont = document.getElementById('reporteContenido');
+  if (!p.length) {
+    cont.innerHTML = '<p class="ayuda">Aún no hay respuestas procesadas. Cargue respuestas, procéselas y vuelva a generar el reporte.</p>';
+    return;
+  }
+  const llaves = ['idea', 'inf', 'arg'];
+  const promedios = {}, dist = {}, debiles = {};
+  llaves.forEach(k => {
+    promedios[k] = p.reduce((a, r) => a + r.resultado.criterios[k].nivel, 0) / p.length;
+    dist[k] = { 4: 0, 3: 0, 2: 0, 1: 0 };
+    p.forEach(r => { dist[k][r.resultado.criterios[k].nivel]++; });
+    debiles[k] = p.filter(r => r.resultado.criterios[k].nivel <= 2).map(r => r.codigo);
+  });
+  const masDebil = llaves.reduce((a, b) => promedios[a] <= promedios[b] ? a : b);
+  const pros = { verde: 0, amarillo: 0, rojo: 0 };
+  p.forEach(r => pros[r.resultado.semaforo]++);
+  const esperado = ESPERADO[E.config.genero] || ESPERADO.narrativo;
+  const aprobadas = E.respuestas.filter(r => r.aprobada).length;
+  const tiempo = E.ultimoProceso ? E.ultimoProceso.ms : null;
+
+  let html = '';
+  html += '<div class="kpis">' +
+    kpi('Respuestas procesadas', p.length, 'de ' + E.respuestas.length + ' en la bandeja') +
+    kpi('Observaciones aprobadas', aprobadas, 'ninguna se comunica sin aprobación') +
+    kpi('Tiempo de procesamiento', (tiempo != null ? ((tiempo / 1000).toFixed(1) + ' s') : '—'), 'línea base actual: varios días') +
+    kpi('Criterio más débil', NOMBRE_CRIT[masDebil], 'promedio ' + promedios[masDebil].toFixed(2) + ' de 4') +
+    '</div>';
+
+  html += '<h4>Desempeño por criterio de comprensión</h4><div class="graficos">';
+  llaves.forEach(k => {
+    const prom = promedios[k];
+    const exp = esperado[k];
+    html += '<div class="graf"><div class="graf-head"><span>' + NOMBRE_CRIT[k] + '</span><span>promedio ' + prom.toFixed(2) + ' · esperado ' + exp + '</span></div>' +
+      '<div class="barra"><div class="barra-fill" style="width:' + (prom / 4 * 100) + '%"></div></div>' +
+      '<div class="niveles-mini">' +
+        [4, 3, 2, 1].map(n => '<span class="mini-n' + n + '">N' + n + ': ' + dist[k][n] + '</span>').join('') +
+      '</div>' +
+      (prom < exp ? '<p class="alerta-texto">Por debajo del nivel esperado para el género ' + E.config.genero + '.</p>' : '<p class="ok-texto">Alcanza el nivel esperado para el género ' + E.config.genero + '.</p>') +
+    '</div>';
+  });
+  html += '</div>';
+
+  html += '<h4>Distribución del nivel de certeza (semáforo)</h4><div class="graficos">' +
+    '<div class="graf"><div class="graf-head"><span>Casos por nivel de certeza</span><span>' + p.length + ' respuestas</span></div>' +
+    '<div class="barra-stack">' +
+      '<div class="stack-verde" style="width:' + (pros.verde / p.length * 100) + '%" title="Verde">' + pros.verde + '</div>' +
+      '<div class="stack-amarillo" style="width:' + (pros.amarillo / p.length * 100) + '%" title="Amarillo">' + pros.amarillo + '</div>' +
+      '<div class="stack-rojo" style="width:' + (pros.rojo / p.length * 100) + '%" title="Rojo">' + pros.rojo + '</div>' +
+    '</div>' +
+    '<p class="leyenda"><span class="pill p-verde">Verde ' + pros.verde + '</span> <span class="pill p-amarillo">Amarillo ' + pros.amarillo + '</span> <span class="pill p-rojo">Rojo ' + pros.rojo + '</span></p>' +
+    '<p class="ayuda">Los casos amarillos y rojos exigen revisión individual antes de comunicar; los verdes se auditan en una muestra aleatoria del 20 %.</p></div></div>';
+
+  const refuerzo = debiles[masDebil];
+  html += '<h4>Mapa de patrones del curso</h4><div class="destacado">' +
+    '<p><strong>Error más recurrente:</strong> ' + NOMBRE_CRIT[masDebil] + '. ' + p.filter(r => r.resultado.criterios[masDebil].nivel <= 2).length + ' de ' + p.length +
+    ' estudiantes (' + Math.round(p.filter(r => r.resultado.criterios[masDebil].nivel <= 2).length / p.length * 100) + ' %) se ubican en nivel 2 o 1 en este criterio.</p>' +
+    '<p><strong>Sugerencia para la retroalimentación colectiva de 15 minutos:</strong> ' + sugerencia(masDebil) + '</p>' +
+    '<p><strong>Estudiantes que requieren refuerzo en este criterio:</strong> ' + (refuerzo.length ? refuerzo.join(', ') : 'ninguno en este lote') + '.</p>' +
+    '</div>';
+
+  html += '<h4>Detalle por estudiante</h4><div class="tabla-scroll"><table><thead><tr><th scope="col">Código</th>' +
+    llaves.map(k => '<th scope="col">' + NOMBRE_CRIT[k] + '</th>').join('') +
+    '<th scope="col">Certeza</th><th scope="col">Estado</th></tr></thead><tbody>' +
+    p.map(r => '<tr><td><strong>' + r.codigo + '</strong></td>' +
+      llaves.map(k => '<td>Nivel ' + r.resultado.criterios[k].nivel + '</td>').join('') +
+      '<td><span class="pill p-' + r.resultado.semaforo + '">' + r.resultado.semaforo + '</span></td>' +
+      '<td>' + (r.publicado ? '<span class="pill p-azul">Comunicada</span>' : (r.aprobada ? '<span class="pill p-verde">Aprobada</span>' : '<span class="pill p-gris">En revisión</span>')) + '</td></tr>').join('') +
+    '</tbody></table></div>';
+
+  cont.innerHTML = html;
+}
+function kpi(titulo, valor, nota) {
+  return '<div class="kpi"><span class="kpi-titulo">' + titulo + '</span><span class="kpi-valor">' + valor + '</span><span class="kpi-nota">' + nota + '</span></div>';
+}
+function sugerencia(k) {
+  if (k === 'idea') return 'Proyectar en el aula dos respuestas del grupo (una del nivel 2 y una del nivel 4) y reconstruir en el tablero la diferencia entre «contar lo que pasa» y «decir de qué trata». Modelar en voz alta la frase «Este capítulo trata de ___ y lo que quiere mostrar es ___».';
+  if (k === 'inf') return 'Leer en voz alta un pasaje del control y completar en grupo la frase «Se puede inferir que ___ porque en el texto ___». Insistir en que la inferencia no es adivinar: sale de indicios del texto.';
+  return 'Tomar una opinión sencilla del grupo y transformarla en el tablero: se escribe la postura, se agrega una razón con «porque» y se cierra con el momento del texto que la respalda.';
+}
+
+/* ---------- Exportaciones ---------- */
+function descargar(nombre, contenido, tipo) {
+  const blob = new Blob([contenido], { type: tipo || 'text/csv;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = nombre; document.body.appendChild(a); a.click();
+  document.body.removeChild(a); URL.revokeObjectURL(url);
+}
+function exportarCSV() {
+  const p = procesadas();
+  if (!p.length) { aviso('avisoReporte', 'No hay resultados procesados para exportar.', 'alerta'); return; }
+  const filas = [['codigo', 'pregunta', 'palabras', 'coincidencia_fragmento_%', 'nivel_idea_principal', 'nivel_inferencia', 'nivel_argumentacion', 'certeza', 'aprobada', 'comunicada', 'observacion_idea_principal', 'observacion_inferencia', 'observacion_argumentacion']];
+  p.forEach(r => filas.push([
+    r.codigo, limpiarCSV(r.pregunta), r.resultado.largo != null ? r.resultado.largo : '',
+    r.resultado.copiaPct != null ? r.resultado.copiaPct : '',
+    r.resultado.criterios.idea.nivel, r.resultado.criterios.inf.nivel, r.resultado.criterios.arg.nivel,
+    r.resultado.semaforo, r.aprobada ? 'sí' : 'no', r.publicado ? 'sí' : 'no',
+    limpiarCSV(obsDe(r, 'idea')), limpiarCSV(obsDe(r, 'inf')), limpiarCSV(obsDe(r, 'arg'))
+  ]));
+  descargar('resultados_control_lectura.csv', '\uFEFF' + filas.map(f => f.join(';')).join('\n'));
+  aviso('avisoReporte', 'Resultados exportados en CSV. Se abre en Excel o en Hojas de cálculo de Google.', 'ok');
+}
+function limpiarCSV(t) { return String(t == null ? '' : t).replace(/[\r\n]+/g, ' ').replace(/;/g, ',').replace(/"/g, "'"); }
+function exportarPruebas() {
+  const filas = [['n', 'escenario', 'entrada', 'resultado_esperado', 'resultado_observado', 'hallazgo', 'ajuste', 'estado']];
+  E.pruebas.forEach(p => filas.push([p.n, p.escenario, p.entrada, p.esperado, p.observado, p.hallazgo, p.ajuste, p.estado].map(limpiarCSV)));
+  descargar('bitacora_pruebas_retrolectura.csv', '\uFEFF' + filas.map(f => f.join(';')).join('\n'));
+}
+
+/* ---------- Vista del sistema ---------- */
+function renderSistema() {
+  const p = procesadas();
+  const est = document.getElementById('sisEstado');
+  if (est) {
+    const verdes = p.filter(r => r.resultado.semaforo === 'verde').length;
+    const revis = p.filter(r => r.resultado.semaforo !== 'verde').length;
+    const audit = E.respuestas.filter(r => r.auditada).length;
+    const disc = E.respuestas.filter(r => r.discrepancia).length;
+    est.innerHTML = '<div class="kpis">' +
+      kpi('Respuestas en el sistema', E.respuestas.length, 'procesadas: ' + p.length) +
+      kpi('Motor utilizado', E.ultimoProceso ? E.ultimoProceso.motor : 'sin ejecutar', E.ultimoProceso ? 'último lote: ' + E.ultimoProceso.ms + ' ms' : '') +
+      kpi('Casos de certeza verde', verdes, 'de estos, auditados al azar: ' + audit) +
+      kpi('Casos de revisión obligatoria', revis, 'amarillos y rojos') +
+      kpi('Discrepancias registradas', disc, 'sobre ' + audit + ' casos auditados') +
+      kpi('Observaciones comunicadas', E.respuestas.filter(r => r.publicado).length, 'requieren aprobación previa') +
+      '</div>';
+  }
+
+  const ind = document.getElementById('sisIndicadores');
+  if (ind) {
+    const meta = E.metacognicion || {};
+    const codigos = Object.keys(meta);
+    const conUtil = codigos.filter(c => meta[c].util).length;
+    const conMejora = codigos.filter(c => meta[c].mejora).length;
+    const audit = E.respuestas.filter(r => r.auditada).length;
+    const disc = E.respuestas.filter(r => r.discrepancia).length;
+    const filas = [
+      ['Porcentaje de estudiantes que mejoran su puntaje entre el control inicial y el posterior',
+        'Se calcula comparando el nivel de la respuesta original con el de la respuesta reescrita en la actividad metacognitiva.',
+        codigos.length ? Math.round(conMejora / codigos.length * 100) + ' % (' + conMejora + ' de ' + codigos.length + ' con comparación registrada)' : 'sin datos aún'],
+      ['Tiempo promedio entre la aplicación del control y la entrega de la retroalimentación',
+        'El prototipo mide el tiempo real de procesamiento del lote; la meta del diseño es un máximo de 48 horas frente a la línea base de varios días.',
+        E.ultimoProceso ? (E.ultimoProceso.ms / 1000).toFixed(1) + ' s para ' + E.ultimoProceso.n + ' respuesta(s)' : 'sin ejecutar'],
+      ['Porcentaje de estudiantes que identifican qué van a mejorar a partir de la retroalimentación',
+        'Se registra cuando el estudiante selecciona la observación que le resultó más útil en la actividad metacognitiva.',
+        codigos.length ? Math.round(conUtil / codigos.length * 100) + ' % (' + conUtil + ' de ' + codigos.length + ')' : 'sin datos aún'],
+      ['Porcentaje de estudiantes que mejoran el nivel de su respuesta reescrita respecto de la original',
+        'Comparación automática entre la respuesta original y la reescrita según la misma rúbrica.',
+        codigos.length ? Math.round(conMejora / codigos.length * 100) + ' %' : 'sin datos aún'],
+      ['Porcentaje de discrepancias entre el criterio docente y la observación de la IA en la auditoría aleatoria',
+        'Indicador de confiabilidad del proceso: se registra cuando el docente marca una discrepancia sobre un caso auditado.',
+        audit ? Math.round(disc / audit * 100) + ' % (' + disc + ' de ' + audit + ' auditados)' : 'sin auditoría ejecutada aún']
+    ];
+    ind.innerHTML = '<div class="tabla-scroll"><table><thead><tr><th scope="col">Indicador de éxito del diseño curricular</th><th scope="col">Cómo se mide en el prototipo</th><th scope="col">Valor actual</th></tr></thead><tbody>' +
+      filas.map(f => '<tr><td><strong>' + f[0] + '</strong></td><td>' + f[1] + '</td><td>' + f[2] + '</td></tr>').join('') +
+      '</tbody></table></div>';
+  }
+
+  const pr = document.getElementById('sisPruebas');
+  if (pr) {
+    pr.innerHTML = '<div class="tabla-scroll"><table><thead><tr><th scope="col">#</th><th scope="col">Escenario</th><th scope="col">Entrada</th><th scope="col">Esperado</th><th scope="col">Observado</th><th scope="col">Hallazgo</th><th scope="col">Ajuste</th><th scope="col">Estado</th></tr></thead><tbody>' +
+      E.pruebas.map(x => '<tr><td>' + x.n + '</td><td><strong>' + x.escenario + '</strong></td><td><small>' + x.entrada + '</small></td><td><small>' + x.esperado + '</small></td><td><small>' + x.observado + '</small></td><td><small>' + x.hallazgo + '</small></td><td><small>' + x.ajuste + '</small></td><td><span class="pill ' + (String(x.estado).indexOf('Corregido') === 0 ? 'p-verde' : 'p-verde') + '">' + x.estado + '</span></td></tr>').join('') +
+      '</tbody></table></div>';
+  }
+}
+function verificarConsistencia() {
+  const p = procesadas();
+  const pr = document.getElementById('sisPruebas');
+  if (!p.length) { alert('No hay respuestas procesadas para re-verificar. Cargue la demostración o procese un lote.'); return; }
+  let iguales = 0; const cambios = [];
+  const t0 = performance.now();
+  p.forEach(r => {
+    const nuevo = analizarRespuesta(r.texto, E.config);
+    const antes = ['idea', 'inf', 'arg'].map(k => r.resultado.criterios[k].nivel).join('-');
+    const ahora = ['idea', 'inf', 'arg'].map(k => nuevo.criterios[k].nivel).join('-');
+    if (antes === ahora) iguales++; else cambios.push(r.codigo + ' (' + antes + ' → ' + ahora + ')');
+  });
+  const ms = Math.round(performance.now() - t0);
+  E.pruebas.push({
+    n: E.pruebas.length + 1,
+    escenario: 'Re-verificación de consistencia del motor de análisis (ejecutada ahora)',
+    entrada: p.length + ' respuestas del lote actual reprocesadas con la misma configuración.',
+    esperado: 'El mismo texto con la misma rúbrica debe producir exactamente los mismos niveles.',
+    observado: iguales + ' de ' + p.length + ' respuestas idénticas en ' + ms + ' ms.' + (cambios.length ? ' Diferencias: ' + cambios.join('; ') : ' Sin diferencias.'),
+    hallazgo: cambios.length ? 'La re-verificación detectó cambios de nivel entre dos ejecuciones.' : 'Sin hallazgos: el motor es determinista y reproducible.',
+    ajuste: cambios.length ? 'Revisar si hubo cambios en la rúbrica o en los términos clave antes de comunicar las observaciones.' : 'Ninguno.',
+    estado: cambios.length ? 'Requiere revisión' : 'Conforme'
+  });
+  guardarEstado(); renderSistema();
+  alert('Re-verificación terminada.\n\nRespuestas idénticas: ' + iguales + ' de ' + p.length + '\nTiempo: ' + ms + ' ms\n' + (cambios.length ? 'Diferencias: ' + cambios.join('; ') : 'Sin diferencias: el resultado es reproducible.'));
+  if (pr && !pr.innerHTML) renderSistema();
+}
+
+/* ---------- Vista del estudiante ---------- */
+function renderSelectoresEstudiante() {
+  const pub = E.respuestas.filter(r => r.publicado);
+  const el = document.getElementById('avisoEst');
+  if (el && pub.length) el.textContent = 'Códigos con retroalimentación disponible: ' + pub.map(r => r.codigo).join(', ') + '.';
+}
+function entrarEstudiante() {
+  const cod = (document.getElementById('estCodigo').value || '').trim().toUpperCase();
+  const cuerpo = document.getElementById('estCuerpo');
+  if (!cod) { aviso('avisoEst', 'Escribe tu código de estudiante para ver tu retroalimentación.', 'alerta'); return; }
+  const r = E.respuestas.find(x => x.codigo === cod && x.publicado);
+  if (!r) {
+    cuerpo.innerHTML = '';
+    aviso('avisoEst', E.respuestas.some(x => x.codigo === cod)
+      ? 'Tu retroalimentación todavía no está disponible: el profesor aún no ha aprobado y publicado las observaciones.'
+      : 'No encontramos ese código en este control. Verifica con tu profesor.', 'alerta');
+    return;
+  }
+  aviso('avisoEst', '', '');
+  const llaves = ['idea', 'inf', 'arg'];
+  const antes = llaves.map(k => ({ k: k, nivel: r.resultado.criterios[k].nivel }));
+  const meta = E.metacognicion[cod];
+  let html = '<div class="tarjeta"><h3 style="margin-top:0">Tu respuesta revisada</h3>' +
+    '<p class="pregunta"><strong>Pregunta:</strong> ' + r.pregunta + '</p>' +
+    '<blockquote class="respuesta">' + (r.texto || '<em>sin contenido</em>') + '</blockquote>' +
+    '<div class="criterios">' + llaves.map(k =>
+      '<div class="crit"><div class="crit-head"><h5>' + NOMBRE_CRIT[k] + '</h5><span class="pill p-azul">Nivel ' + antes.find(a => a.k === k).nivel + ' · ' + nivelNombre(antes.find(a => a.k === k).nivel) + '</span></div>' +
+      '<p>' + obsDe(r, k) + '</p></div>').join('') + '</div>' +
+    '<p class="ayuda">Esta retroalimentación fue revisada y aprobada por tu profesor antes de llegar a ti.</p></div>';
+
+  html += '<div class="tarjeta tarjeta-dorada"><h3 style="margin-top:0">Actividad de metacognición (10 minutos)</h3>' +
+    '<p>Elige la observación que te pareció más útil y reescribe una de tus respuestas argumentativas para comprobar si alcanzas el nivel esperado.</p>' +
+    '<div class="campo"><span class="etiqueta-campo">¿Cuál observación te resultó más útil?</span>' +
+    llaves.map(k => '<label class="opcion"><input type="radio" name="util_' + cod + '" value="' + k + '"' + (meta && meta.util === k ? ' checked' : '') + '> <span>' + NOMBRE_CRIT[k] + '</span></label>').join('') +
+    '</div>' +
+    '<div class="campo"><label for="reescritura_' + cod + '">Reescribe tu respuesta aplicando la acción concreta de esa observación</label>' +
+    '<textarea id="reescritura_' + cod + '" rows="5" placeholder="Escribe aquí tu nueva versión de la respuesta.">' + (meta && meta.reescritura ? meta.reescritura : '') + '</textarea></div>' +
+    '<button class="btn btn-azul" type="button" onclick="compararRespuesta(\'' + cod + '\')">🔎 Comparar con mi respuesta original</button>' +
+    '<div id="resultadoMeta"></div></div>';
+
+  if (meta && meta.despues) {
+    html += bloqueComparacion(meta);
+  }
+  cuerpo.innerHTML = html;
+}
+function bloqueComparacion(meta) {
+  const llaves = ['idea', 'inf', 'arg'];
+  const filas = llaves.map(k =>
+    '<tr><td><strong>' + NOMBRE_CRIT[k] + '</strong></td><td>Nivel ' + meta.antes[k] + '</td><td>Nivel ' + meta.despues[k] + '</td>' +
+    '<td>' + (meta.despues[k] > meta.antes[k] ? '<span class="pill p-verde">Mejoró</span>' : (meta.despues[k] === meta.antes[k] ? '<span class="pill p-gris">Se mantiene</span>' : '<span class="pill p-amarillo">Bajó</span>')) + '</td></tr>').join('');
+  const suben = llaves.filter(k => meta.despues[k] > meta.antes[k]).map(k => NOMBRE_CRIT[k]);
+  const bajan = llaves.filter(k => meta.despues[k] < meta.antes[k]).map(k => NOMBRE_CRIT[k]);
+  let balance = '';
+  if (suben.length) balance += 'Mejoraste en <strong>' + suben.join(' y ') + '</strong>: la acción de la observación se ve en tu nueva respuesta. ';
+  if (bajan.length) balance += 'En <strong>' + bajan.join(' y ') + '</strong> bajaste con respecto a tu respuesta original: la nueva versión dejó de lado lo que allí sí hacías. ';
+  if (!suben.length && !bajan.length) balance += 'Tu respuesta reescrita quedó en el mismo nivel: aplica con más precisión la acción concreta que propone la observación. ';
+  return '<div class="destacado" style="margin-top:16px"><h4>Comparación antes / después</h4>' +
+    '<div class="tabla-scroll"><table><thead><tr><th scope="col">Criterio</th><th scope="col">Respuesta original</th><th scope="col">Respuesta reescrita</th><th scope="col">Cambio</th></tr></thead><tbody>' + filas + '</tbody></table></div>' +
+    '<p>' + balance + '<strong>Total de niveles ganados:</strong> ' + meta.total + '.</p>' +
+    '<p class="ayuda">El profesor ve esta comparación como evidencia de que la retroalimentación se tradujo en una mejora concreta.</p></div>';
+}
+function compararRespuesta(cod) {
+  const r = E.respuestas.find(x => x.codigo === cod);
+  if (!r) return;
+  const util = (document.querySelector('input[name="util_' + cod + '"]:checked') || {}).value || null;
+  const reescritura = (document.getElementById('reescritura_' + cod).value || '').trim();
+  if (!util) { alert('Primero elige la observación que te resultó más útil.'); return; }
+  if (reescritura.split(/\s+/).filter(Boolean).length < 5) { alert('Escribe tu nueva versión de la respuesta antes de comparar.'); return; }
+  const nuevo = analizarRespuesta(reescritura, E.config);
+  const antes = {}, despues = {};
+  let total = 0;
+  ['idea', 'inf', 'arg'].forEach(k => {
+    antes[k] = r.resultado.criterios[k].nivel;
+    despues[k] = nuevo.criterios[k].nivel;
+    total += despues[k] - antes[k];
+  });
+  E.metacognicion[cod] = { util: util, reescritura: reescritura, antes: antes, despues: despues, mejora: total > 0, total: total, fecha: new Date().toISOString() };
+  guardarEstado(); entrarEstudiante(); renderSistema();
+}
+
+/* ---------- Inicio ---------- */
+document.addEventListener('DOMContentLoaded', function () {
+  cargarConfigEnFormulario();
+  renderEditorRubrica();
+  renderBandeja();
+  renderRevision();
+  renderSistema();
+});
+</script>
+</body>
+</html>
