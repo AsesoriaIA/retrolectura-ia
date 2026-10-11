@@ -1352,14 +1352,14 @@ async function procesarBandeja() {
       if (motor === 'ia') {
         r.resultado = await analizarConIA(r.texto, E.config);
       } else {
-        aplicarResultado(r, analizarRespuesta(r.texto, E.config));
+        r.resultado = aplicarResultado(r, analizarRespuesta(r.texto, E.config));
       }
       r.obsEditada = null; r.aprobada = false; r.publicado = false; r.auditada = false;
       r.semaforo = r.resultado.semaforo;
       lineas.push('✔ ' + r.codigo + ' procesada · semáforo ' + r.resultado.semaforo + ' · niveles ' +
         Object.keys(r.resultado.criterios).map(k => r.resultado.criterios[k].nivel).join(' · '));
     } catch (err) {
-      lineas.push('✖ ' + r.codigo + ' no pudo procesarse con el motor de IA (' + err.message + '). Puede reprocesar ese caso con el motor de análisis por rúbrica.');
+      lineas.push('✖ ' + r.codigo + ' no pudo procesarse con el ' + (motor === 'ia' ? 'motor de IA generativa' : 'motor de análisis por rúbrica') + ' (' + err.message + '). Puede reprocesar ese caso con el otro motor.');
     }
     if (barra) barra.style.width = Math.round((i + 1) / aProcesar.length * 100) + '%';
     log.innerHTML = lineas.join('<br>');
@@ -1635,7 +1635,7 @@ function renderSistema() {
         codigos.length ? Math.round(conMejora / codigos.length * 100) + ' % (' + conMejora + ' de ' + codigos.length + ' con comparación registrada)' : 'sin datos aún'],
       ['Tiempo promedio entre la aplicación del control y la entrega de la retroalimentación',
         'El prototipo mide el tiempo real de procesamiento del lote; la meta del diseño es un máximo de 48 horas frente a la línea base de varios días.',
-        E.ultimoProceso ? (E.ultimoProceso.ms / 1000).toFixed(1) + ' s para ' + E.ultimoProceso.n + ' respuesta(s)' : 'sin ejecutar'],
+        E.ultimoProceso ? (E.ultimoProceso.ms < 1000 ? E.ultimoProceso.ms + ' ms' : (E.ultimoProceso.ms / 1000).toFixed(1) + ' s') + ' para ' + E.ultimoProceso.n + ' respuesta(s)' : 'sin ejecutar'],
       ['Porcentaje de estudiantes que identifican qué van a mejorar a partir de la retroalimentación',
         'Se registra cuando el estudiante selecciona la observación que le resultó más útil en la actividad metacognitiva.',
         codigos.length ? Math.round(conUtil / codigos.length * 100) + ' % (' + conUtil + ' de ' + codigos.length + ')' : 'sin datos aún'],
@@ -1745,7 +1745,9 @@ function bloqueComparacion(meta) {
   return '<div class="destacado" style="margin-top:16px"><h4>Comparación antes / después</h4>' +
     '<div class="tabla-scroll"><table><thead><tr><th scope="col">Criterio</th><th scope="col">Respuesta original</th><th scope="col">Respuesta reescrita</th><th scope="col">Cambio</th></tr></thead><tbody>' + filas + '</tbody></table></div>' +
     '<p>' + balance + '<strong>Total de niveles ganados:</strong> ' + meta.total + '.</p>' +
-    '<p class="ayuda">El profesor ve esta comparación como evidencia de que la retroalimentación se tradujo en una mejora concreta.</p></div>';
+    '<p class="ayuda">' + (meta.total > 0
+        ? 'Tu profesor registra esta comparación como evidencia de que la retroalimentación se tradujo en una mejora concreta.'
+        : 'Tu profesor registra esta comparación para acompañarte: revisar lo que ya habías escrito también muestra qué estrategias te estaban funcionando y vale la pena conservarlas.') + '</p></div>';
 }
 function compararRespuesta(cod) {
   const r = E.respuestas.find(x => x.codigo === cod);
