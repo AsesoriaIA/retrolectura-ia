@@ -766,11 +766,20 @@ section h4{margin-top:26px}
 <script>
 /* =========================================================================
    RetroLectura IA — Prototipo funcional
-   Maestría en Educación Mediada por las TIC (UTB) · Grupo 01
+   Maestría en Educación Mediada por las TIC (UTB) · Maritza Jiménez, Betty Lagos y Yessica Márquez
    Todo el procesamiento ocurre en el navegador del docente.
    ========================================================================= */
 
 const LS = 'retrolectura_ia_v1';
+
+/* Presentación legible del tiempo de procesamiento: el lote puede tardar
+   menos de un milisegundo y un "0 ms" se lee como un error. */
+function fmtTiempo(ms) {
+  if (ms == null) return 'sin ejecutar';
+  if (ms < 1) return 'menos de 1 ms';
+  if (ms < 1000) return Math.round(ms) + ' ms';
+  return (ms / 1000).toFixed(1) + ' s';
+}
 
 const RUBRICA_BASE = {
   idea: { nombre: 'Idea principal', niveles: {
@@ -1287,7 +1296,7 @@ function cargarDemostracion() {
   E.ultimoProceso = { ms: ms, n: E.respuestas.length, motor: 'Motor A · Análisis por rúbrica', fecha: new Date().toISOString() };
   guardarEstado();
   renderBandeja(); renderRevision(); renderSistema(); generarReporte();
-  aviso('avisoRevision', 'Demostración cargada: ' + E.respuestas.length + ' respuestas procesadas en ' + ms + ' ms. Se aprobaron ' + aprob + ' casos de certeza verde y quedan ' + pend + ' casos amarillos o rojos pendientes de su revisión.', 'ok');
+  aviso('avisoRevision', 'Demostración cargada: ' + E.respuestas.length + ' respuestas procesadas en ' + fmtTiempo(ms) + '. Se aprobaron ' + aprob + ' casos de certeza verde y quedan ' + pend + ' casos amarillos o rojos pendientes de su revisión.', 'ok');
   cambiarRol('docente'); cambiarPaso(4);
 }
 function renderBandeja() {
@@ -1516,7 +1525,7 @@ function generarReporte() {
   html += '<div class="kpis">' +
     kpi('Respuestas procesadas', p.length, 'de ' + E.respuestas.length + ' en la bandeja') +
     kpi('Observaciones aprobadas', aprobadas, 'ninguna se comunica sin aprobación') +
-    kpi('Tiempo de procesamiento', (tiempo != null ? (tiempo < 1000 ? tiempo + ' ms' : (tiempo / 1000).toFixed(1) + ' s') : '—'), 'línea base actual: varios días') +
+    kpi('Tiempo de procesamiento', (tiempo != null ? fmtTiempo(tiempo) : '—'), 'línea base actual: varios días') +
     kpi('Criterio más débil', NOMBRE_CRIT[masDebil], 'promedio ' + promedios[masDebil].toFixed(2) + ' de 4') +
     '</div>';
 
@@ -1612,7 +1621,7 @@ function renderSistema() {
     const disc = E.respuestas.filter(r => r.discrepancia).length;
     est.innerHTML = '<div class="kpis">' +
       kpi('Respuestas en el sistema', E.respuestas.length, 'procesadas: ' + p.length) +
-      kpi('Motor utilizado', E.ultimoProceso ? E.ultimoProceso.motor : 'sin ejecutar', E.ultimoProceso ? 'último lote: ' + E.ultimoProceso.ms + ' ms' : '') +
+      kpi('Motor utilizado', E.ultimoProceso ? E.ultimoProceso.motor : 'sin ejecutar', E.ultimoProceso ? 'último lote: ' + fmtTiempo(E.ultimoProceso.ms) : '') +
       kpi('Casos de certeza verde', verdes, 'de estos, auditados al azar: ' + audit) +
       kpi('Casos de revisión obligatoria', revis, 'amarillos y rojos') +
       kpi('Discrepancias registradas', disc, 'sobre ' + audit + ' casos auditados') +
@@ -1634,7 +1643,7 @@ function renderSistema() {
         codigos.length ? Math.round(conMejora / codigos.length * 100) + ' % (' + conMejora + ' de ' + codigos.length + ' con comparación registrada)' : 'sin datos aún'],
       ['Tiempo promedio entre la aplicación del control y la entrega de la retroalimentación',
         'El prototipo mide el tiempo real de procesamiento del lote; la meta del diseño es un máximo de 48 horas frente a la línea base de varios días.',
-        E.ultimoProceso ? (E.ultimoProceso.ms < 1000 ? E.ultimoProceso.ms + ' ms' : (E.ultimoProceso.ms / 1000).toFixed(1) + ' s') + ' para ' + E.ultimoProceso.n + ' respuesta(s)' : 'sin ejecutar'],
+        E.ultimoProceso ? fmtTiempo(E.ultimoProceso.ms) + ' para ' + E.ultimoProceso.n + ' respuesta(s)' : 'sin ejecutar'],
       ['Porcentaje de estudiantes que identifican qué van a mejorar a partir de la retroalimentación',
         'Se registra cuando el estudiante selecciona la observación que le resultó más útil en la actividad metacognitiva.',
         codigos.length ? Math.round(conUtil / codigos.length * 100) + ' % (' + conUtil + ' de ' + codigos.length + ')' : 'sin datos aún'],
