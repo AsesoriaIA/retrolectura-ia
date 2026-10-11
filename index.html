@@ -36,6 +36,11 @@ nav.menu a:hover{background:rgba(255,255,255,.14); border-color:rgba(255,255,255
 .hero{background:linear-gradient(135deg,var(--azul) 0%,var(--azul-medio) 100%); color:#fff; padding:54px 0 46px}
 .hero h1{margin:0 0 10px; font-size:2.15rem; line-height:1.2}
 .hero .bajada{font-size:1.14rem; max-width:820px; color:#EAF1FA; margin:0 0 22px}
+/* Aviso flotante: confirma la acción sin depender de la posición del scroll */
+.toast-demo{position:fixed; top:16px; left:50%; transform:translateX(-50%); z-index:9999; background:#0E7C3A; color:#fff;
+  padding:14px 22px; border-radius:12px; font-weight:600; font-size:1.02rem; line-height:1.35; text-align:center;
+  max-width:min(92vw,700px); box-shadow:0 10px 30px rgba(0,0,0,.28); opacity:0; pointer-events:none}
+.toast-demo.visible{opacity:1}
 .insignias{display:flex; flex-wrap:wrap; gap:9px; margin-bottom:24px}
 .insignia{background:rgba(255,255,255,.14); border:1px solid rgba(255,255,255,.3); padding:6px 13px; border-radius:999px; font-size:.83rem; font-weight:700}
 .insignia.dorada{background:var(--dorado); color:var(--azul); border-color:var(--dorado)}
@@ -1298,6 +1303,43 @@ function cargarDemostracion() {
   renderBandeja(); renderRevision(); renderSistema(); generarReporte();
   aviso('avisoRevision', 'Demostración cargada: ' + E.respuestas.length + ' respuestas procesadas en ' + fmtTiempo(ms) + '. Se aprobaron ' + aprob + ' casos de certeza verde y quedan ' + pend + ' casos amarillos o rojos pendientes de su revisión.', 'ok');
   cambiarRol('docente'); cambiarPaso(4);
+  /* El resultado se dibuja más abajo en la página: si el docente está en el
+     encabezado, necesita ver de inmediato que la acción sí ocurrió. */
+  mostrarToast('✅ Demostración cargada: ' + E.respuestas.length + ' respuestas procesadas en ' + fmtTiempo(ms) + '. ' + aprob + ' casos verdes aprobados y ' + pend + ' pendientes de su revisión.');
+  [].slice.call(document.querySelectorAll('button')).forEach(function (b) {
+    if ((b.getAttribute('onclick') || '').indexOf('cargarDemostracion') >= 0) {
+      b.textContent = '✅ Demostración cargada · ' + E.respuestas.length + ' respuestas';
+    }
+  });
+  setTimeout(function () {
+    var av = document.getElementById('avisoRevision');
+    var sec = (av && av.offsetParent) ? av : document.getElementById('prototipo');
+    if (!sec || !sec.scrollIntoView) return;
+    /* El sitio usa scroll-behavior:smooth global, que en distancias largas es
+       lento y puede no completarse: aquí el salto debe ser inmediato. */
+    var html = document.documentElement;
+    var previo = html.style.scrollBehavior;
+    html.style.scrollBehavior = 'auto';
+    try { sec.scrollIntoView({ block: 'center' }); }
+    catch (e) { window.scrollTo(0, Math.max(0, sec.offsetTop - 90)); }
+    setTimeout(function () { html.style.scrollBehavior = previo || ''; }, 120);
+  }, 300);
+}
+
+/* Aviso flotante reutilizable (visible sin importar la posición del scroll) */
+function mostrarToast(texto, duracion) {
+  var t = document.getElementById('toastDemo');
+  if (!t) {
+    t = document.createElement('div');
+    t.id = 'toastDemo'; t.className = 'toast-demo';
+    t.setAttribute('role', 'status'); t.setAttribute('aria-live', 'polite');
+    document.body.appendChild(t);
+  }
+  t.textContent = texto;
+  void t.offsetWidth;              // fuerza el reflujo para que la transición sí se vea
+  t.classList.add('visible');
+  clearTimeout(t.__timer);
+  t.__timer = setTimeout(function () { t.classList.remove('visible'); }, duracion || 8000);
 }
 function renderBandeja() {
   const tb = document.getElementById('tablaBandeja');
