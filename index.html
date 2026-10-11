@@ -646,7 +646,7 @@ section h4{margin-top:26px}
         <tr><td><strong>Operatividad</strong></td><td>¿El sistema responde sin errores?</td><td>Yessica Márquez (rol docente)</td><td><span class="pill p-verde">Cumple</span></td></tr>
         <tr><td><strong>Interacción</strong></td><td>¿El flujo de uso es intuitivo?</td><td>Maritza Jiménez (rol docente)</td><td><span class="pill p-verde">Cumple</span></td></tr>
         <tr><td><strong>Precisión</strong></td><td>¿Los resultados generados son correctos?</td><td>Betty Lagos (rol docente, verificación contra la rúbrica)</td><td><span class="pill p-verde">Cumple</span></td></tr>
-        <tr><td><strong>Usabilidad</strong></td><td>¿Es accesible para su público objetivo?</td><td>Equipo completo (rol estudiante, prueba en celular y computador)</td><td><span class="pill p-verde">Cumple</span></td></tr>
+        <tr><td><strong>Usabilidad</strong></td><td>¿Es accesible para su público objetivo?</td><td>Las tres integrantes (rol estudiante, prueba en celular y computador)</td><td><span class="pill p-verde">Cumple</span></td></tr>
       </tbody>
     </table>
     </div>
@@ -742,10 +742,9 @@ section h4{margin-top:26px}
     <table>
       <thead><tr><th scope="col">Integrante</th><th scope="col">Etapas en las que participó</th><th scope="col">Aporte concreto al prototipo</th></tr></thead>
       <tbody>
-        <tr><td><strong>Betty Esperanza Lagos Quintero</strong></td><td>Requerimientos · Contenido · Pruebas</td><td>Revisión de los requerimientos curriculares y de la coherencia con los objetivos del diseño; elaboración de la rúbrica base del control y prueba de precisión de los resultados.</td></tr>
-        <tr><td><strong>Yessica Márquez Núñez</strong></td><td>Configuración · Construcción · Pruebas</td><td>Configuración de la herramienta y del motor de análisis, construcción del flujo de interacción y ejecución de las pruebas de operatividad.</td></tr>
-        <tr><td><strong>Maritza Jiménez Saldarriaga</strong></td><td>Construcción · Pruebas · Integración</td><td>Construcción de la interfaz y del reporte del curso, análisis ético y de viabilidad, e integración de los componentes en la solución única.</td></tr>
-        <tr><td><strong>Ángela <em>(integrante del grupo)</em></strong></td><td>Pruebas · Validación</td><td>Simulación de los recorridos del rol estudiante y verificación de usabilidad y accesibilidad en dispositivos móviles.</td></tr>
+        <tr><td><strong>Betty Esperanza Lagos Quintero</strong></td><td>Requerimientos · Contenido · Pruebas</td><td>Revisión de los requerimientos curriculares y de la coherencia con los objetivos del diseño; elaboración de la rúbrica base del control y prueba de precisión de los resultados contra los descriptores de la rúbrica.</td></tr>
+        <tr><td><strong>Yessica Márquez Núñez</strong></td><td>Configuración · Construcción · Pruebas</td><td>Configuración de la herramienta y del motor de análisis, construcción del flujo de interacción, ejecución de las pruebas de operatividad y simulación de los recorridos del rol estudiante en celular.</td></tr>
+        <tr><td><strong>Maritza Jiménez Saldarriaga</strong></td><td>Construcción · Pruebas · Integración</td><td>Construcción de la interfaz y del reporte del curso, verificación de usabilidad y accesibilidad, análisis ético y de viabilidad, e integración de los componentes en la solución única.</td></tr>
       </tbody>
     </table>
     </div>
@@ -1517,7 +1516,7 @@ function generarReporte() {
   html += '<div class="kpis">' +
     kpi('Respuestas procesadas', p.length, 'de ' + E.respuestas.length + ' en la bandeja') +
     kpi('Observaciones aprobadas', aprobadas, 'ninguna se comunica sin aprobación') +
-    kpi('Tiempo de procesamiento', (tiempo != null ? ((tiempo / 1000).toFixed(1) + ' s') : '—'), 'línea base actual: varios días') +
+    kpi('Tiempo de procesamiento', (tiempo != null ? (tiempo < 1000 ? tiempo + ' ms' : (tiempo / 1000).toFixed(1) + ' s') : '—'), 'línea base actual: varios días') +
     kpi('Criterio más débil', NOMBRE_CRIT[masDebil], 'promedio ' + promedios[masDebil].toFixed(2) + ' de 4') +
     '</div>';
 
